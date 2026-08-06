@@ -1402,6 +1402,16 @@
             showToast(`Año ${a} creado exitosamente.`);
         }
     <script>
+        // --- AUTO-SINCRONIZACIÓN AL RECUPERAR CONEXIÓN ---
+window.addEventListener('online', () => {
+    showToast("Conexión restablecida. Sincronizando datos...", "success");
+    sincronizarDesdeCloud(false); 
+    subirACloud();
+});
+
+window.addEventListener('offline', () => {
+    showToast("Sin conexión a internet. Trabajando en modo offline.", "error");
+});
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
         .then(() => console.log('Service Worker registrado correctamente.'))
