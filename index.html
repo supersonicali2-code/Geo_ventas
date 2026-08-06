@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo Registro de Ventas - Geovision</title>
+    <title>Módulo Registro de Ventas - Geovision De Colombia</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -73,7 +73,7 @@
         </div>
         <!-- Pie de página Landing -->
         <footer class="mt-8 text-xs text-slate-500 font-medium tracking-wide">
-            Desarrollado por Robert E. Muriel A.
+            Desarrollado por Robert E. Muriel A. para uso exclusivo de Geovision de Colombia S.A.S
         </footer>
     </div>
 
@@ -87,7 +87,7 @@
                     <button onclick="irAVistaPrincipal()" class="no-print bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border border-slate-700" title="Volver al Menú Principal">
                         <i class="fa-solid fa-house text-blue-400"></i>
                     </button>
-                    <h1 class="text-sm sm:text-base font-bold tracking-wider">GEOVISION <span class="text-slate-400 font-light text-xs ml-1" id="lblSaludoIngeniero"></span></h1>
+                    <h1 class="text-sm sm:text-base font-bold tracking-wider">GEOVISION DE COLOMBIA <span class="text-slate-400 font-light text-xs ml-1" id="lblSaludoIngeniero"></span></h1>
                 </div>
                 
                 <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
@@ -376,7 +376,7 @@
 
         <!-- Pie de página App -->
         <footer class="mt-auto py-4 text-center text-xs text-slate-400 font-medium border-t border-slate-200">
-            Desarrollado por Robert E. Muriel A.
+            Desarrollado por Robert E. Muriel A. para uso exclusivo de Geovision de Colombia S.A.S
         </footer>
     </div>
 
@@ -549,7 +549,8 @@
         const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
         let ingenieroActual = localStorage.getItem('geovision_ingeniero') || "";
         let anioActual = localStorage.getItem('geovision_anio_activo') || "2026";
-        let cloudUrl = localStorage.getItem('geovision_cloud_url') || "";
+        // Enlace JSONStorage preconfigurado por defecto
+        let cloudUrl = localStorage.getItem('geovision_cloud_url') || "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57";
         let vistaActual = "main";
         let trimestreSeleccionado = 1;
         let mesSeleccionado = 8;
