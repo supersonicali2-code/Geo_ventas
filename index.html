@@ -557,14 +557,68 @@
 
     <script>
         const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-        let ingenieroActual = localStorage.getItem('geovision_ingeniero') || "";
-        let anioActual = localStorage.getItem('geovision_anio_activo') || "2026";
-        let cloudUrl = localStorage.getItem('geovision_cloud_url') || "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57";
-        let vistaActual = "main";
-        let trimestreSeleccionado = 1;
-        let mesSeleccionado = 8;
-        let pedidoEditandoId = null;
-        let chartInstances = {};
+let ingenieroActual = localStorage.getItem('geovision_ingeniero') || "";
+let anioActual = localStorage.getItem('geovision_anio_activo') || "2026";
+let vistaActual = "main";
+let trimestreSeleccionado = 1;
+let mesSeleccionado = 8;
+let pedidoEditandoId = null;
+let chartInstances = {};
+
+// --- DESCARGAR DESDE LA NUBE (GET) ---
+function sincronizarDesdeCloud(mostrarAviso = true) {
+    const urlGet = "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57";
+
+    fetch(urlGet)
+        .then(response => {
+            if (!response.ok) throw new Error("No se pudo conectar con la nube");
+            return response.json();
+        })
+        .then(data => {
+            if (data && Object.keys(data).length > 0) {
+                dbAnios = data;
+                localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
+                
+                if (typeof poblarSelectLandingAnios === 'function') poblarSelectLandingAnios();
+                if (typeof actualizarSistema === 'function') actualizarSistema();
+                
+                if (mostrarAviso && typeof showToast === 'function') {
+                    showToast("Datos sincronizados desde la nube exitosamente.", "success");
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Error al sincronizar desde la nube:", err);
+            if (mostrarAviso && typeof showToast === 'function') {
+                showToast("Error al sincronizar con la nube.", "error");
+            }
+        });
+}
+
+// --- SUBIR A LA NUBE (PUT) ---
+function subirACloud() {
+    const urlPut = "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57?apiKey=%your api key%";
+
+    const datosGuardar = localStorage.getItem('geovision_multianual_db') || "{}";
+
+    fetch(urlPut, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: datosGuardar
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Error al actualizar la nube");
+        console.log("Datos subidos a la nube correctamente.");
+    })
+    .catch(err => {
+        console.error("Fallo la subida a la nube:", err);
+        if (typeof showToast === 'function') {
+            showToast("Fallo la subida a la nube.", "error");
+        }
+    });
+}
 
         // --- SISTEMA DE NOTIFICACIONES TOAST (PRO) ---
         function showToast(message, type = 'success') {
