@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo Registro de Ventas - Geovision De Colombia</title>
+    <title>Geovision Pro - Registro de Ventas</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js para Gráficos Circulares Profesionales -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
     <style>
         @media print {
             body { background: white !important; color: #1e293b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -45,6 +48,9 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-16 flex flex-col min-h-screen">
 
+    <!-- CONTENEDOR DE NOTIFICACIONES TOAST (PRO) -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-[100] space-y-2 pointer-events-none"></div>
+
     <!-- ==================== VISTA 1: LANDING PAGE (INGRESO) ==================== -->
     <div id="viewLanding" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4">
         <div class="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-6">
@@ -53,12 +59,16 @@
             </div>
             <div>
                 <h2 class="text-xl font-black text-white tracking-wide">MÓDULO REGISTRO DE VENTAS</h2>
-                <p class="text-xs text-blue-400 font-semibold mt-1 uppercase tracking-wider">Geovision de Colombia</p>
+                <p class="text-xs text-blue-400 font-semibold mt-1 uppercase tracking-wider">Geovision de Colombia (Pro)</p>
             </div>
             <div class="space-y-4 text-left">
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Nombre del Ingeniero</label>
                     <input type="text" id="inputIngeniero" placeholder="Ej. Carlos Andrés" class="w-full p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-400 font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Contraseña (Opcional)</label>
+                    <input type="password" id="inputPassword" placeholder="••••••••" class="w-full p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-400 font-semibold">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Seleccionar Año</label>
@@ -73,7 +83,7 @@
         </div>
         <!-- Pie de página Landing -->
         <footer class="mt-8 text-xs text-slate-500 font-medium tracking-wide">
-            Desarrollado por Robert E. Muriel A. para uso exclusivo de Geovision de Colombia S.A.S
+            Desarrollado por Robert E. Muriel A.
         </footer>
     </div>
 
@@ -87,7 +97,7 @@
                     <button onclick="irAVistaPrincipal()" class="no-print bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border border-slate-700" title="Volver al Menú Principal">
                         <i class="fa-solid fa-house text-blue-400"></i>
                     </button>
-                    <h1 class="text-sm sm:text-base font-bold tracking-wider">GEOVISION DE COLOMBIA <span class="text-slate-400 font-light text-xs ml-1" id="lblSaludoIngeniero"></span></h1>
+                    <h1 class="text-sm sm:text-base font-bold tracking-wider">GEOVISION <span class="text-slate-400 font-light text-xs ml-1" id="lblSaludoIngeniero"></span></h1>
                 </div>
                 
                 <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
@@ -334,7 +344,7 @@
                                 <input type="text" id="cliente" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Nombre">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-500 uppercase">Monto ($ COP)</label>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase">Monto ($ COP - Permite Negativos)</label>
                                 <input type="number" id="monto" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Valor">
                             </div>
                             <div>
@@ -376,7 +386,7 @@
 
         <!-- Pie de página App -->
         <footer class="mt-auto py-4 text-center text-xs text-slate-400 font-medium border-t border-slate-200">
-            Desarrollado por Robert E. Muriel A. para uso exclusivo de Geovision de Colombia S.A.S
+            Desarrollado por Robert E. Muriel A.
         </footer>
     </div>
 
@@ -549,13 +559,23 @@
         const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
         let ingenieroActual = localStorage.getItem('geovision_ingeniero') || "";
         let anioActual = localStorage.getItem('geovision_anio_activo') || "2026";
-        // Enlace JSONStorage preconfigurado por defecto
         let cloudUrl = localStorage.getItem('geovision_cloud_url') || "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57";
         let vistaActual = "main";
         let trimestreSeleccionado = 1;
         let mesSeleccionado = 8;
         let pedidoEditandoId = null;
         let chartInstances = {};
+
+        // --- SISTEMA DE NOTIFICACIONES TOAST (PRO) ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const color = type === 'error' ? 'bg-red-600' : 'bg-blue-600';
+            toast.className = `${color} text-white px-6 py-3 rounded-lg shadow-2xl pointer-events-auto transform transition-all duration-300 text-sm font-bold`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
 
         const metas2026Default = {
             1: 105906172.04, 2: 104824700.00, 3: 119708923.00,
@@ -595,6 +615,7 @@
 
         let dbAnios = JSON.parse(localStorage.getItem('geovision_multianual_db')) || {
             "2026": {
+                version: 1,
                 metas: metas2026Default,
                 configComision: { base: 2688000, tope: 4300800 },
                 pedidos: datosOficiales2026
@@ -611,10 +632,10 @@
             verificarSesion();
         });
 
-        // ==================== LÓGICA DE NUBE (JSONSTORAGE.NET) ====================
+        // ==================== LÓGICA DE NUBE & CONcurrencia (VERSIONING) ====================
         function guardarUrlNube() {
             const urlInput = document.getElementById('inputCloudUrl').value.trim();
-            if(!urlInput) { alert("Por favor ingresa un enlace válido."); return; }
+            if(!urlInput) { showToast("Por favor ingresa un enlace válido.", "error"); return; }
             cloudUrl = urlInput;
             localStorage.setItem('geovision_cloud_url', cloudUrl);
             sincronizarDesdeCloud(true);
@@ -627,16 +648,23 @@
                 if (!response.ok) throw new Error("Error en conexión con la nube");
                 const data = await response.json();
                 
-                // Asegurar que la nube no reemplace los datos con un objeto vacío
                 if (data && Object.keys(data).length > 0) {
-                    dbAnios = data;
-                    localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
-                    actualizarSistema();
-                    if(mostrarAlerta) alert("¡Datos sincronizados exitosamente desde la nube!");
+                    // Control de concurrencia: comparar versiones
+                    const localVersion = dbAnios[anioActual]?.version || 0;
+                    const cloudVersion = data[anioActual]?.version || 0;
+
+                    if (cloudVersion > localVersion || !dbAnios[anioActual]) {
+                        dbAnios = data;
+                        localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
+                        actualizarSistema();
+                        if(mostrarAlerta) showToast("¡Datos actualizados desde la nube (versión más reciente)!");
+                    } else if (mostrarAlerta) {
+                        showToast("La versión local ya se encuentra actualizada.");
+                    }
                 }
             } catch (error) {
                 console.error("Error al sincronizar:", error);
-                if(mostrarAlerta) alert("Hubo un problema descargando datos de la nube. Revisa tu URL.");
+                if(mostrarAlerta) showToast("Hubo un problema descargando datos de la nube.", "error");
             }
         }
 
@@ -644,7 +672,7 @@
             if (!cloudUrl) return;
             try {
                 const response = await fetch(cloudUrl, {
-                    method: 'PUT', // JSONStorage usa PUT para actualizar
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dbAnios)
                 });
@@ -656,11 +684,16 @@
         }
 
         function guardarYRefrescar() {
-            // Guarda en disco duro local
+            if (!dbAnios[anioActual]) {
+                dbAnios[anioActual] = { version: 1, metas: {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0}, configComision: {base:2688000, tope:4300800}, pedidos: [] };
+            }
+            // Incrementar versión local para concurrencia
+            dbAnios[anioActual].version = (dbAnios[anioActual].version || 0) + 1;
+            
             localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
             actualizarSistema();
-            // Dispara el guardado en la nube de JSONStorage
             subirACloud();
+            showToast("Datos guardados correctamente.");
         }
 
         // ==================== LÓGICA GENERAL DE VISTAS ====================
@@ -688,18 +721,31 @@
 
         function ingresarAlSistema() {
             const nombre = document.getElementById('inputIngeniero').value.trim();
-            if (!nombre) { alert("Por favor ingresa tu nombre."); return; }
+            const pass = document.getElementById('inputPassword').value.trim();
+            if (!nombre) { showToast("Por favor ingresa tu nombre.", "error"); return; }
+            
+            let savedPass = localStorage.getItem('geovision_pass') || "";
+            if (savedPass && pass !== savedPass) {
+                showToast("Contraseña incorrecta.", "error");
+                return;
+            }
+            if (!savedPass && pass) {
+                localStorage.setItem('geovision_pass', pass);
+            }
+
             ingenieroActual = nombre;
             anioActual = document.getElementById('selectLandingAnio').value;
             localStorage.setItem('geovision_ingeniero', ingenieroActual);
             localStorage.setItem('geovision_anio_activo', anioActual);
             verificarSesion();
+            showToast(`¡Bienvenido, ${ingenieroActual}!`);
         }
 
         function cerrarSesion() {
             localStorage.removeItem('geovision_ingeniero');
             ingenieroActual = "";
             verificarSesion();
+            showToast("Sesión cerrada.");
         }
 
         function reiniciarSistemaCompleto() {
@@ -710,6 +756,7 @@
                 ingenieroActual = "";
                 dbAnios = {
                     "2026": {
+                        version: 1,
                         metas: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0 },
                         configComision: { base: 2688000, tope: 4300800 },
                         pedidos: []
@@ -717,7 +764,8 @@
                 };
                 cerrarConfiguracion();
                 verificarSesion();
-                subirACloud(); // Actualizar nube al borrar
+                subirACloud();
+                showToast("Sistema restablecido por completo.");
             }
         }
 
@@ -767,6 +815,7 @@
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
+            showToast("Respaldo local descargado.");
         }
 
         function importarDatos(event) {
@@ -778,12 +827,12 @@
                     let importedDb = JSON.parse(e.target.result);
                     if (importedDb) {
                         dbAnios = importedDb;
-                        guardarYRefrescar(); // Asegura el guardado local y en la nube
-                        alert("¡Configuración y datos importados con éxito!");
+                        guardarYRefrescar();
+                        showToast("¡Configuración y datos importados con éxito!");
                         cerrarConfiguracion();
                         poblarSelectLandingAnios();
                     }
-                } catch(err) { alert("Error al leer el archivo JSON de respaldo."); }
+                } catch(err) { showToast("Error al leer el archivo JSON de respaldo.", "error"); }
             };
             reader.readAsText(file);
         }
@@ -1335,12 +1384,12 @@
 
         function crearNuevoAnio() {
             let a = document.getElementById('nuevoAnioInput').value.trim();
-            if(!a || isNaN(a)) { alert("Año inválido"); return; }
-            if(dbAnios[a]) { alert("El año ya existe"); return; }
+            if(!a || isNaN(a)) { showToast("Año inválido", "error"); return; }
+            if(dbAnios[a]) { showToast("El año ya existe", "error"); return; }
 
             let metasNuevas = {};
             for(let i=1; i<=12; i++) metasNuevas[i] = 0;
-            dbAnios[a] = { metas: metasNuevas, configComision: { base: 2688000, tope: 4300800 }, pedidos: [] };
+            dbAnios[a] = { version: 1, metas: metasNuevas, configComision: { base: 2688000, tope: 4300800 }, pedidos: [] };
             anioActual = a;
             localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
             localStorage.setItem('geovision_anio_activo', anioActual);
@@ -1349,7 +1398,8 @@
             cerrarConfiguracion();
             poblarSelectLandingAnios();
             actualizarSistema();
-            subirACloud(); // Actualiza la nube con el nuevo año.
+            subirACloud();
+            showToast(`Año ${a} creado exitosamente.`);
         }
     </script>
 </body>
