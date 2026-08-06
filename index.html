@@ -1401,7 +1401,6 @@
             subirACloud();
             showToast(`Año ${a} creado exitosamente.`);
         }
-    <script>
         // --- AUTO-SINCRONIZACIÓN AL RECUPERAR CONEXIÓN ---
 window.addEventListener('online', () => {
     showToast("Conexión restablecida. Sincronizando datos...", "success");
@@ -1417,6 +1416,5 @@ window.addEventListener('offline', () => {
         .then(() => console.log('Service Worker registrado correctamente.'))
         .catch((err) => console.log('Error en Service Worker:', err));
     }
-</script>
 </body>
 </html>
