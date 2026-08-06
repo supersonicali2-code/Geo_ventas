@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo Registro de Ventas - Geovision</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para Gráficos Circulares Profesionales -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media print {
+            body { background: white !important; color: #1e293b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #viewLanding, nav, .no-print, form, input, select, footer { display: none !important; }
+            .print-header { display: block !important; }
+            
+            /* ---- REGLAS DE IMPRESIÓN NORMAL (VISTA PRINCIPAL) ---- */
+            body:not(.imprimiendo-modal) #viewApp {
+                display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0;
+            }
+            body:not(.imprimiendo-modal) #modalDetallePeriodo { display: none !important; }
+
+            /* ---- REGLAS DE IMPRESIÓN DE REPORTE (MODAL AISLADO) ---- */
+            body.imprimiendo-modal #viewApp { display: none !important; }
+            body.imprimiendo-modal #modalDetallePeriodo {
+                display: block !important; position: relative !important; left: 0; top: 0; width: 100% !important; background: white !important; box-shadow: none !important;
+            }
+            body.imprimiendo-modal .print-modal-content { overflow: visible !important; max-height: none !important; padding: 0 !important; }
+
+            /* Solución al recuadro negro en las cantidades */
+            .print-badge { background-color: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; }
+            .print-badge * { color: #0f172a !important; }
+            
+            /* Adaptar tarjetas a impresión limpia */
+            .bg-gradient-to-br { background: white !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+            .bg-gradient-to-br * { color: #1e293b !important; }
+            .bg-gradient-to-br .text-blue-400, .bg-gradient-to-br .text-yellow-400 { color: #2563eb !important; }
+            .bg-white { border: 1px solid #e2e8f0 !important; box-shadow: none !important; }
+            .bg-blue-50 { background-color: #eff6ff !important; border: 1px solid #bfdbfe !important; }
+            .bg-slate-50 { background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans pb-16 flex flex-col min-h-screen">
+
+    <!-- ==================== VISTA 1: LANDING PAGE (INGRESO) ==================== -->
+    <div id="viewLanding" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4">
+        <div class="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-6">
+            <div class="inline-flex bg-blue-600/30 p-4 rounded-full text-blue-400 text-3xl border border-blue-400/30">
+                <i class="fa-solid fa-satellite-dish"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-black text-white tracking-wide">MÓDULO REGISTRO DE VENTAS</h2>
+                <p class="text-xs text-blue-400 font-semibold mt-1 uppercase tracking-wider">Geovision de Colombia</p>
+            </div>
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Nombre del Ingeniero</label>
+                    <input type="text" id="inputIngeniero" placeholder="Ej. Carlos Andrés" class="w-full p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-400 font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Seleccionar Año</label>
+                    <select id="selectLandingAnio" class="w-full p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-400 font-semibold cursor-pointer">
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+                <button onclick="ingresarAlSistema()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-blue-600/30">
+                    Ingresar al Módulo <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Pie de página Landing -->
+        <footer class="mt-8 text-xs text-slate-500 font-medium tracking-wide">
+            Desarrollado por Robert E. Muriel A.
+        </footer>
+    </div>
+
+    <!-- ==================== APLICACIÓN PRINCIPAL ==================== -->
+    <div id="viewApp" class="hidden flex-1 flex flex-col">
+        
+        <!-- Barra Superior -->
+        <nav class="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-45">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <button onclick="irAVistaPrincipal()" class="no-print bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border border-slate-700" title="Volver al Menú Principal">
+                        <i class="fa-solid fa-house text-blue-400"></i>
+                    </button>
+                    <h1 class="text-sm sm:text-base font-bold tracking-wider">GEOVISION <span class="text-slate-400 font-light text-xs ml-1" id="lblSaludoIngeniero"></span></h1>
+                </div>
+                
+                <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+                    <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <span class="text-xs font-semibold text-slate-400">AÑO:</span>
+                        <span id="lblAnioActivo" class="font-bold text-sm text-yellow-400">2026</span>
+                    </div>
+                    <!-- Botón de Sincronización Manual Cloud -->
+                    <button onclick="sincronizarDesdeCloud(true)" class="no-print bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 border border-blue-500/30 shadow-sm" title="Sincronizar Nube Manualmente">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> <span class="hidden sm:inline">Nube</span>
+                    </button>
+                    <button onclick="window.print()" class="no-print bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Imprimir vista actual">
+                        <i class="fa-solid fa-print"></i> Imprimir Vista
+                    </button>
+                    <button onclick="abrirConfiguracion()" class="no-print bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-gear"></i> Configuración
+                    </button>
+                    <button onclick="cerrarSesion()" class="no-print bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors border border-slate-700" title="Cambiar de usuario">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto p-4 space-y-6 mt-2 flex-1 w-full">
+
+            <!-- Encabezado exclusivo para impresión de Pantalla Principal -->
+            <div class="print-header hidden mb-6 p-4 border-b-2 border-slate-800">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-black text-slate-900">GEOVISION DE COLOMBIA</h1>
+                        <p class="text-xs font-semibold text-slate-600 uppercase tracking-widest mt-1">Módulo Registro de Ventas - Reporte Ejecutivo</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-slate-800">Ingeniero: <span id="printIngenieroNombre"></span></p>
+                        <p class="text-xs text-slate-600">Año Activo: <span id="printAnioNombre">2026</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== SUB-VISTA A: MENÚ PRINCIPAL (PIRÁMIDE) ==================== -->
+            <div id="subviewMain" class="space-y-6">
+                
+                <!-- NIVEL 1 (CÚSPIDE): AÑO CENTRADO -->
+                <div class="flex justify-center">
+                    <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 rounded-3xl shadow-2xl border border-blue-500/40 w-full max-w-xl">
+                        <div class="flex justify-between items-center border-b border-blue-500/30 pb-3">
+                            <span class="text-xs font-black tracking-widest text-blue-400 uppercase"><i class="fa-solid fa-trophy mr-1"></i> Progreso Anual Total</span>
+                            <div class="flex items-center gap-2">
+                                <span class="print-badge text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-blue-200 border border-blue-400/40 flex items-center gap-1">
+                                    <i class="fa-solid fa-bag-shopping"></i> <span id="mainConteoAnual">0</span> ventas
+                                </span>
+                                <button onclick="abrirDetallePeriodo('anual')" class="no-print text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer flex items-center gap-1 shadow-sm" title="Ver detalle de ventas del año">
+                                    <i class="fa-solid fa-file-contract"></i> Ver Detalle y Gráficos
+                                </button>
+                                <span id="mainCumpAnualBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="text-center sm:text-left">
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Venta Facturada Acumulada</p>
+                                <h3 class="text-2xl sm:text-3xl font-black text-white mt-1" id="mainVentaAnual">$0</h3>
+                            </div>
+                            <!-- Gráfico Circular Anual Estilizado -->
+                            <div class="w-24 h-24 relative flex-shrink-0 drop-shadow-[0_4px_10px_rgba(59,130,246,0.3)]">
+                                <canvas id="chartAnio"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-slate-800 text-xs text-slate-300">
+                            <div>
+                                <p class="text-slate-400">Meta Anual:</p>
+                                <p class="font-bold text-white text-sm" id="mainMetaAnual">$0</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-slate-400">Comisión + Arrastre Real:</p>
+                                <p class="font-black text-yellow-400 text-sm" id="mainComisionAnual">$0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NIVEL 2 (MEDIO): SEMESTRES S1 Y S2 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                    <!-- Semestre 1 -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-300 transition-all space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-400 uppercase"><i class="fa-solid fa-calendar-days text-blue-600 mr-1"></i> Semestre 1 (Ene - Jun)</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="print-badge text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md border border-slate-200 flex items-center gap-1">
+                                    <i class="fa-solid fa-bag-shopping text-slate-400"></i> <span id="mainConteos1">0</span> ventas
+                                </span>
+                                <button onclick="abrirDetallePeriodo('semestre', 1)" class="no-print text-xs font-bold px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center gap-1 cursor-pointer" title="Reporte y Gráfico S1">
+                                    <i class="fa-solid fa-file-contract"></i> Reporte
+                                </button>
+                                <span class="font-bold text-blue-600 text-xs px-2 py-0.5 bg-blue-50 rounded-full" id="mainCumpS1">0%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl sm:text-2xl font-black text-slate-800" id="mainVentaS1">$0</h3>
+                                <p class="text-xs text-slate-500 mt-1">Meta S1: <span class="font-semibold text-slate-700" id="mainMetaS1">$0</span></p>
+                            </div>
+                            <div class="w-20 h-20 relative flex-shrink-0 drop-shadow-sm">
+                                <canvas id="chartS1"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Semestre 2 -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-300 transition-all space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-400 uppercase"><i class="fa-solid fa-calendar-days text-indigo-600 mr-1"></i> Semestre 2 (Jul - Dic)</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="print-badge text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md border border-slate-200 flex items-center gap-1">
+                                    <i class="fa-solid fa-bag-shopping text-slate-400"></i> <span id="mainConteo2">0</span> ventas
+                                </span>
+                                <button onclick="abrirDetallePeriodo('semestre', 2)" class="no-print text-xs font-bold px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors flex items-center gap-1 cursor-pointer" title="Reporte y Gráfico S2">
+                                    <i class="fa-solid fa-file-contract"></i> Reporte
+                                </button>
+                                <span class="font-bold text-indigo-600 text-xs px-2 py-0.5 bg-indigo-50 rounded-full" id="mainCumpS2">0%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl sm:text-2xl font-black text-slate-800" id="mainVentaS2">$0</h3>
+                                <p class="text-xs text-slate-500 mt-1">Meta S2: <span class="font-semibold text-slate-700" id="mainMetaS2">$0</span></p>
+                            </div>
+                            <div class="w-20 h-20 relative flex-shrink-0 drop-shadow-sm">
+                                <canvas id="chartS2"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NIVEL 3 (BASE): LOS 4 TRIMESTRES -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-sm font-black text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-blue-600"></i> Desglose Trimestral (Haz clic en gestionar o ver reporte)
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="contenedorTarjetasTrimestres">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+
+                <!-- NIVEL 4 (INFORME MENSUAL): LOS 12 MESES -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-sm font-black text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-green-600"></i> Resumen de los 12 Meses (Haz clic en un mes para gestionarlo)
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="contenedorResumenMeses">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== SUB-VISTA B: DETALLE DE TRIMESTRE ==================== -->
+            <div id="subviewQuarter" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <button onclick="irAVistaPrincipal()" class="no-print text-xs text-blue-600 hover:text-blue-800 font-bold mb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-left"></i> Volver al Menú Principal
+                        </button>
+                        <h2 class="text-xl font-black text-slate-800" id="qTitle">Detalle de Trimestre</h2>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="abrirDetallePeriodo('trimestre', trimestreSeleccionado)" class="no-print bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-contract"></i> Imprimir Reporte Trimestral Completo
+                        </button>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-400 uppercase font-bold">Estado Trimestral</p>
+                            <span id="qBadge" class="px-3 py-1 text-xs rounded-full font-bold">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="qMesesContainer">
+                    <!-- Generado por JS -->
+                </div>
+            </div>
+
+            <!-- ==================== SUB-VISTA C: GESTIÓN DE MES ==================== -->
+            <div id="subviewMonth" class="hidden space-y-6">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <button onclick="volverATrimestreActual()" class="no-print text-xs text-blue-600 hover:text-blue-800 font-bold mb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-left"></i> Volver al Trimestre
+                        </button>
+                        <h2 class="text-xl font-black text-slate-800" id="mTitle">Gestión del Mes</h2>
+                    </div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <button onclick="abrirDetallePeriodo('mes', mesSeleccionado)" class="no-print bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-contract"></i> Imprimir Reporte Mensual Completo
+                        </button>
+                        <div class="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
+                            <span class="font-bold text-xs text-slate-500 uppercase"><i class="fa-solid fa-bag-shopping text-blue-600 mr-1"></i> Ventas Mes:</span>
+                            <span id="lblConteoMes" class="font-black text-sm text-slate-800">0</span>
+                        </div>
+                        <div class="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-xl border border-blue-200">
+                            <span class="font-bold text-xs text-blue-700 uppercase">Meta Cuota Mes:</span>
+                            <span id="lblMetaMes" class="font-black text-sm text-blue-900">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPIs del Mes -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-green-500 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Venta Facturada (Mes)</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1" id="mKpiFacturado">$0</h3>
+                            <p class="text-sm mt-2 text-slate-600">Cumplimiento: <span id="mKpiPorcentaje" class="font-bold text-green-600">0%</span></p>
+                        </div>
+                        <div class="w-20 h-20 relative flex-shrink-0 drop-shadow-sm">
+                            <canvas id="chartMesKpi"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-400">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Comisión del Mes</p>
+                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="mKpiComision">$0</h3>
+                        <p class="text-sm mt-2 text-slate-600">Base 100%: <span class="font-bold text-slate-700" id="mBaseLbl">$2.688.000</span></p>
+                    </div>
+                    <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-sm border border-slate-800">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Arrastre (Trimestre)</p>
+                        <h3 class="text-2xl font-black text-yellow-400 mt-1" id="mKpiArrastreTrimestre">$0</h3>
+                        <p class="text-sm mt-2 text-slate-300">Liberado por cumplimiento Q &ge; 100%</p>
+                    </div>
+                </div>
+
+                <!-- Formulario y Tabla de Pedidos -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="no-print bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit" id="panelFormulario">
+                        <h2 class="text-lg font-bold text-slate-700 border-b pb-2 mb-4">
+                            <i class="fa-solid fa-pen-to-square text-green-500 mr-1"></i> Registrar / Editar Pedido
+                        </h2>
+                        <form id="formPedido" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase">ID Pedido / Factura</label>
+                                <input type="text" id="idPedido" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Ej. 7108">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase">Cliente / Integrador</label>
+                                <input type="text" id="cliente" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Nombre">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase">Monto ($ COP)</label>
+                                <input type="number" id="monto" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Valor">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase">Estado</label>
+                                <select id="estado" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+                                    <option value="Facturado">Facturado (Real)</option>
+                                    <option value="Montado">Montado (Pipeline)</option>
+                                </select>
+                            </div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="submit" id="btnGuardarPedido" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Guardar</button>
+                                <button type="button" id="btnCancelarEdicion" onclick="cancelarEdicion()" class="hidden w-1/3 bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                            <h2 class="font-bold text-slate-700">Registros del Mes (<span id="contadorRegistros">0</span>)</h2>
+                        </div>
+                        <div class="overflow-x-auto max-h-[450px]">
+                            <table class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-500 uppercase bg-slate-100 sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3">ID</th>
+                                        <th class="px-6 py-3">Cliente</th>
+                                        <th class="px-6 py-3">Monto</th>
+                                        <th class="px-6 py-3">Estado</th>
+                                        <th class="px-6 py-3 text-right no-print">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaPedidos" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Pie de página App -->
+        <footer class="mt-auto py-4 text-center text-xs text-slate-400 font-medium border-t border-slate-200">
+            Desarrollado por Robert E. Muriel A.
+        </footer>
+    </div>
+
+    <!-- ==================== MODAL REPORTE EJECUTIVO AISLADO ==================== -->
+    <div id="modalDetallePeriodo" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center no-print">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-file-invoice-dollar text-blue-400 mr-2"></i> Reporte Ejecutivo Generado</h3>
+                <button onclick="cerrarDetallePeriodo()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 sm:p-8 overflow-y-auto flex-1 bg-white print-modal-content">
+                
+                <!-- Encabezado de impresión exclusivo del Modal -->
+                <div class="hidden print:block mb-6 pb-4 border-b border-slate-300">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h1 class="text-2xl font-black text-slate-900">GEOVISION DE COLOMBIA</h1>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Reporte Analítico de Ventas</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-slate-800">Ingeniero: <span class="printIngenieroModal"></span></p>
+                            <p class="text-xs text-slate-600">Año de Ejercicio: <span class="printAnioModal"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Título y Gráfico del Modal -->
+                <div class="flex flex-col-reverse sm:flex-row justify-between items-center sm:items-start mb-8 gap-4">
+                    <div class="text-center sm:text-left">
+                        <h2 class="text-2xl sm:text-3xl font-black text-slate-800" id="reporteSubTitulo">Detalle de Operaciones</h2>
+                        <p class="text-sm text-slate-500 font-semibold mt-1" id="reporteInfoIngeniero"></p>
+                    </div>
+                    <div class="w-28 h-28 relative flex-shrink-0 drop-shadow-md">
+                        <canvas id="chartReporteModal"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tarjetas KPI Modal -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 print:grid-cols-3 print:gap-4">
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Meta / Presupuesto</p>
+                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="reporteModalMeta">$0</h3>
+                    </div>
+                    <div class="bg-blue-50 p-5 rounded-xl border border-blue-200 shadow-sm">
+                        <p class="text-xs font-bold text-blue-700 uppercase tracking-wide">Venta Facturada</p>
+                        <h3 class="text-2xl font-black text-blue-900 mt-1" id="reporteModalVenta">$0</h3>
+                    </div>
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-start">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">% Cumplimiento</p>
+                        <div id="reporteModalCump"></div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-100">
+                            <tr>
+                                <th class="px-5 py-4">Período / Mes</th>
+                                <th class="px-5 py-4">ID Factura</th>
+                                <th class="px-5 py-4">Cliente</th>
+                                <th class="px-5 py-4">Monto Facturado</th>
+                                <th class="px-5 py-4">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaReporteDetalle" class="divide-y divide-slate-200 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-slate-100 px-6 py-4 flex justify-between items-center border-t no-print">
+                <span class="text-xs text-slate-500 font-semibold" id="reporteConteoVentas">0 ventas encontradas</span>
+                <div class="flex gap-3">
+                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md transition-colors">
+                        <i class="fa-solid fa-print"></i> Imprimir Reporte Generado
+                    </button>
+                    <button onclick="cerrarDetallePeriodo()" class="bg-slate-600 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL CONFIGURACIÓN ==================== -->
+    <div id="modalConfig" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-sliders text-blue-400 mr-2"></i> Configuración y Presupuestos</h3>
+                <button onclick="cerrarConfiguracion()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6">
+                <!-- Sincronización Cloud -->
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 space-y-3">
+                    <h4 class="font-bold text-indigo-900 text-sm"><i class="fa-solid fa-cloud-arrow-up text-indigo-600 mr-1"></i> Sincronización en la Nube (JSONStorage)</h4>
+                    <p class="text-xs text-indigo-700">Conecta tu base de datos para sincronizar tu PC y dispositivos móviles automáticamente.</p>
+                    <div class="flex gap-2 items-center">
+                        <input type="text" id="inputCloudUrl" placeholder="https://api.jsonstorage.net/v1/json/..." class="p-2 border rounded-lg w-full outline-none text-xs text-slate-700 font-medium border-indigo-300 focus:ring-2 focus:ring-indigo-400">
+                        <button type="button" onclick="guardarUrlNube()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-sm flex-shrink-0">Conectar API</button>
+                    </div>
+                </div>
+
+                <!-- Crear Año -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <h4 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-calendar-plus text-green-600 mr-1"></i> Crear Nuevo Año</h4>
+                    <div class="flex gap-3 items-center">
+                        <input type="number" id="nuevoAnioInput" placeholder="Ej. 2027" class="p-2 border rounded-lg w-40 outline-none">
+                        <button onclick="crearNuevoAnio()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Crear Año</button>
+                    </div>
+                </div>
+
+                <!-- Exportar e Importar Datos / Configuración -->
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 space-y-3">
+                    <h4 class="font-bold text-blue-900 text-sm"><i class="fa-solid fa-file-arrow-down text-blue-600 mr-1"></i> Respaldo Manual Local (Backup)</h4>
+                    <p class="text-xs text-blue-700">Exporta un archivo JSON de respaldo si no deseas usar la nube.</p>
+                    <div class="flex gap-3 flex-wrap pt-1">
+                        <button type="button" onclick="exportarDatos()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-download"></i> Descargar JSON Local
+                        </button>
+                        <label class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors shadow-sm flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-upload"></i> Cargar JSON Local
+                            <input type="file" id="inputImportFile" accept=".json" onchange="importarDatos(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Reglas Comisión -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <h4 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-money-bill-wave text-blue-600 mr-1"></i> Reglas de Comisión (<span id="cfgAnioLabel">2026</span>)</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase">Comisión Base Mensual (100%):</label>
+                            <input type="number" id="paramBase" class="w-full mt-1 p-2 border rounded-lg font-semibold text-slate-700">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase">Tope Máximo Comisión Mensual:</label>
+                            <input type="number" id="paramTope" class="w-full mt-1 p-2 border rounded-lg font-semibold text-slate-700">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Presupuestos Mensuales -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-chart-column text-indigo-600 mr-1"></i> Metas / Presupuestos Mensuales ($ COP)</h4>
+                        <button type="button" onclick="limpiarMetasModal()" class="text-xs text-red-600 hover:text-red-800 font-semibold flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors border border-red-200">
+                            <i class="fa-solid fa-eraser"></i> Limpiar Presupuestos
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="inputsMetasMeses"></div>
+                </div>
+
+                <!-- Zona de Peligro / Reset -->
+                <div class="bg-red-50 p-4 rounded-xl border border-red-200 space-y-2">
+                    <h4 class="font-bold text-red-700 text-sm"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Zona de Restablecimiento</h4>
+                    <p class="text-xs text-red-600">Elimina todos los pedidos guardados, limpia la base local y reinicia el módulo.</p>
+                    <button type="button" onclick="reiniciarSistemaCompleto()" class="mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Borrar Todo y Reiniciar Sistema
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-100 px-6 py-4 flex justify-end gap-3 border-t">
+                <button onclick="cerrarConfiguracion()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Cancelar</button>
+                <button onclick="guardarConfiguracion()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+        let ingenieroActual = localStorage.getItem('geovision_ingeniero') || "";
+        let anioActual = localStorage.getItem('geovision_anio_activo') || "2026";
+        let cloudUrl = localStorage.getItem('geovision_cloud_url') || "";
+        let vistaActual = "main";
+        let trimestreSeleccionado = 1;
+        let mesSeleccionado = 8;
+        let pedidoEditandoId = null;
+        let chartInstances = {};
+
+        const metas2026Default = {
+            1: 105906172.04, 2: 104824700.00, 3: 119708923.00,
+            4: 116117656.00, 5: 117278832.00, 6: 119038015.00,
+            7: 120228395.00, 8: 116621543.00, 9: 117787759.00,
+            10: 120379089.00, 11: 121462501.00, 12: 115389376.00
+        };
+
+        const datosOficiales2026 = [
+            {"id": 1, "numero": "6135", "cliente": "BETHEL", "monto": 1630076.0, "mes": 1, "estado": "Facturado"},
+            {"id": 2, "numero": "6227", "cliente": "SEDETEL", "monto": 2610543.0, "mes": 1, "estado": "Facturado"},
+            {"id": 3, "numero": "6433", "cliente": "COLOMBIAN SECURITY", "monto": 3531645.0, "mes": 1, "estado": "Facturado"},
+            {"id": 4, "numero": "6489", "cliente": "SERVITECH", "monto": 30845425.0, "mes": 1, "estado": "Facturado"},
+            {"id": 5, "numero": "6640", "cliente": "LANDULFO GUTIERREZ", "monto": 870303.0, "mes": 2, "estado": "Facturado"},
+            {"id": 6, "numero": "6641", "cliente": "LANDULFO GUTIERREZ", "monto": 1720310.0, "mes": 2, "estado": "Facturado"},
+            {"id": 7, "numero": "6667", "cliente": "GIOVANI CHAMAT", "monto": 599365.0, "mes": 2, "estado": "Facturado"},
+            {"id": 8, "numero": "6680", "cliente": "ATLAS", "monto": 4338801.0, "mes": 2, "estado": "Facturado"},
+            {"id": 9, "numero": "6378", "cliente": "SEDETEL", "monto": 7200000.0, "mes": 3, "estado": "Facturado"},
+            {"id": 10, "numero": "6518", "cliente": "SEDETEL", "monto": 128368.0, "mes": 3, "estado": "Facturado"},
+            {"id": 11, "numero": "6561", "cliente": "APICOM", "monto": 2952115.0, "mes": 3, "estado": "Facturado"},
+            {"id": 12, "numero": "6602", "cliente": "SECUTEC", "monto": 44555690.0, "mes": 3, "estado": "Facturado"},
+            {"id": 13, "numero": "6716", "cliente": "SECUTEC", "monto": 59237446.0, "mes": 4, "estado": "Facturado"},
+            {"id": 14, "numero": "6727", "cliente": "INPRO GLOBAL", "monto": 36618801.0, "mes": 4, "estado": "Facturado"},
+            {"id": 15, "numero": "6803", "cliente": "SEDETEL", "monto": 20926364.0, "mes": 4, "estado": "Facturado"},
+            {"id": 16, "numero": "6733", "cliente": "SECUTEC", "monto": 274286032.0, "mes": 5, "estado": "Facturado"},
+            {"id": 17, "numero": "6859", "cliente": "COMUNISANDER", "monto": 4155891.0, "mes": 5, "estado": "Facturado"},
+            {"id": 18, "numero": "6881", "cliente": "LANDULFO", "monto": 5770577.0, "mes": 5, "estado": "Facturado"},
+            {"id": 19, "numero": "6882", "SEKYURITI", "monto": 75519758.0, "mes": 5, "estado": "Facturado"},
+            {"id": 20, "numero": "6716", "cliente": "SECUTEC", "monto": 74910888.0, "mes": 6, "estado": "Facturado"},
+            {"id": 21, "numero": "6954", "cliente": "WILOX", "monto": 4078787.0, "mes": 6, "estado": "Facturado"},
+            {"id": 22, "numero": "6980", "cliente": "SEKYURITI", "monto": 36707590.0, "mes": 6, "estado": "Facturado"},
+            {"id": 23, "numero": "7026", "cliente": "WILVER CORTEZ", "monto": 4553055.0, "mes": 7, "estado": "Facturado"},
+            {"id": 24, "numero": "7050", "cliente": "ATLAS", "monto": 20697048.0, "mes": 7, "estado": "Facturado"},
+            {"id": 25, "numero": "6716", "cliente": "SECUTEC", "monto": 68967251.0, "mes": 8, "estado": "Facturado"},
+            {"id": 26, "numero": "6762", "cliente": "SEDETEL", "monto": 69792681.0, "mes": 8, "estado": "Facturado"}
+        ];
+
+        let dbAnios = JSON.parse(localStorage.getItem('geovision_multianual_db')) || {
+            "2026": {
+                metas: metas2026Default,
+                configComision: { base: 2688000, tope: 4300800 },
+                pedidos: datosOficiales2026
+            }
+        };
+
+        const mesesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if(cloudUrl) {
+                document.getElementById('inputCloudUrl').value = cloudUrl;
+                sincronizarDesdeCloud(false); // Sincronización silenciosa inicial
+            }
+            verificarSesion();
+        });
+
+        // ==================== LÓGICA DE NUBE (JSONSTORAGE.NET) ====================
+        function guardarUrlNube() {
+            const urlInput = document.getElementById('inputCloudUrl').value.trim();
+            if(!urlInput) { alert("Por favor ingresa un enlace válido."); return; }
+            cloudUrl = urlInput;
+            localStorage.setItem('geovision_cloud_url', cloudUrl);
+            sincronizarDesdeCloud(true);
+        }
+
+        async function sincronizarDesdeCloud(mostrarAlerta = false) {
+            if (!cloudUrl) return;
+            try {
+                const response = await fetch(cloudUrl);
+                if (!response.ok) throw new Error("Error en conexión con la nube");
+                const data = await response.json();
+                
+                // Asegurar que la nube no reemplace los datos con un objeto vacío
+                if (data && Object.keys(data).length > 0) {
+                    dbAnios = data;
+                    localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
+                    actualizarSistema();
+                    if(mostrarAlerta) alert("¡Datos sincronizados exitosamente desde la nube!");
+                }
+            } catch (error) {
+                console.error("Error al sincronizar:", error);
+                if(mostrarAlerta) alert("Hubo un problema descargando datos de la nube. Revisa tu URL.");
+            }
+        }
+
+        async function subirACloud() {
+            if (!cloudUrl) return;
+            try {
+                const response = await fetch(cloudUrl, {
+                    method: 'PUT', // JSONStorage usa PUT para actualizar
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dbAnios)
+                });
+                if (!response.ok) throw new Error("Error al subir a la nube");
+                console.log("Datos sincronizados en la nube exitosamente.");
+            } catch (error) {
+                console.error("Fallo la subida a la nube:", error);
+            }
+        }
+
+        function guardarYRefrescar() {
+            // Guarda en disco duro local
+            localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
+            actualizarSistema();
+            // Dispara el guardado en la nube de JSONStorage
+            subirACloud();
+        }
+
+        // ==================== LÓGICA GENERAL DE VISTAS ====================
+        function verificarSesion() {
+            if (ingenieroActual) {
+                document.getElementById('viewLanding').classList.add('hidden');
+                document.getElementById('viewApp').classList.remove('hidden');
+                document.getElementById('lblSaludoIngeniero').innerText = `| ${ingenieroActual}`;
+                document.getElementById('printIngenieroNombre').innerText = ingenieroActual;
+                document.querySelectorAll('.printIngenieroModal').forEach(el => el.innerText = ingenieroActual);
+                actualizarSistema();
+            } else {
+                document.getElementById('viewLanding').classList.remove('hidden');
+                document.getElementById('viewApp').classList.add('hidden');
+                poblarSelectLandingAnios();
+            }
+        }
+
+        function poblarSelectLandingAnios() {
+            const sel = document.getElementById('selectLandingAnio');
+            sel.innerHTML = '';
+            Object.keys(dbAnios).sort().forEach(a => { sel.add(new Option(a, a)); });
+            sel.value = anioActual;
+        }
+
+        function ingresarAlSistema() {
+            const nombre = document.getElementById('inputIngeniero').value.trim();
+            if (!nombre) { alert("Por favor ingresa tu nombre."); return; }
+            ingenieroActual = nombre;
+            anioActual = document.getElementById('selectLandingAnio').value;
+            localStorage.setItem('geovision_ingeniero', ingenieroActual);
+            localStorage.setItem('geovision_anio_activo', anioActual);
+            verificarSesion();
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('geovision_ingeniero');
+            ingenieroActual = "";
+            verificarSesion();
+        }
+
+        function reiniciarSistemaCompleto() {
+            if (confirm("⚠️ ¿Estás seguro de restablecer el sistema? Se borrarán todos los pedidos guardados y la configuración para dejar el módulo limpio.")) {
+                localStorage.removeItem('geovision_multianual_db');
+                localStorage.removeItem('geovision_ingeniero');
+                localStorage.removeItem('geovision_anio_activo');
+                ingenieroActual = "";
+                dbAnios = {
+                    "2026": {
+                        metas: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0 },
+                        configComision: { base: 2688000, tope: 4300800 },
+                        pedidos: []
+                    }
+                };
+                cerrarConfiguracion();
+                verificarSesion();
+                subirACloud(); // Actualizar nube al borrar
+            }
+        }
+
+        function limpiarMetasModal() {
+            for(let i=1; i<=12; i++) {
+                let input = document.getElementById(`meta_mes_${i}`);
+                if(input) input.value = 0;
+            }
+        }
+
+        function renderizarGraficoDona(canvasId, cumplimiento) {
+            let ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            if (chartInstances[canvasId]) { chartInstances[canvasId].destroy(); }
+
+            let val = Math.min(Math.max(cumplimiento, 0), 1);
+            let restante = Math.max(1 - val, 0);
+            if (cumplimiento > 1) { val = 1; restante = 0; }
+
+            let context = ctx.getContext('2d');
+            let gradientBlue = context.createLinearGradient(0, 0, 0, 120);
+            gradientBlue.addColorStop(0, '#60a5fa');
+            gradientBlue.addColorStop(1, '#1d4ed8');
+
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [val * 100, restante * 100],
+                        backgroundColor: [gradientBlue, '#334155'],
+                        borderWidth: 0, borderRadius: 6, spacing: 2
+                    }]
+                },
+                options: {
+                    cutout: '82%', responsive: true, maintainAspectRatio: false,
+                    plugins: { tooltip: { enabled: false }, legend: { display: false } },
+                    animation: { animateScale: true, animateRotate: true }
+                }
+            });
+        }
+
+        function exportarDatos() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbAnios, null, 2));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `geovision_respaldo_ventas_${anioActual}_${ingenieroActual.replace(/\s+/g, '_')}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importarDatos(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let importedDb = JSON.parse(e.target.result);
+                    if (importedDb) {
+                        dbAnios = importedDb;
+                        guardarYRefrescar(); // Asegura el guardado local y en la nube
+                        alert("¡Configuración y datos importados con éxito!");
+                        cerrarConfiguracion();
+                        poblarSelectLandingAnios();
+                    }
+                } catch(err) { alert("Error al leer el archivo JSON de respaldo."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function abrirDetallePeriodo(tipo, param) {
+            document.body.classList.add('imprimiendo-modal');
+            let datos = dbAnios[anioActual];
+            if (!datos) return;
+            let pedidos = datos.pedidos;
+            let filtrados = [];
+            let mesesPeriodo = [];
+            let tituloPeriodo = "";
+
+            if (tipo === 'anual') {
+                mesesPeriodo = [1,2,3,4,5,6,7,8,9,10,11,12];
+                tituloPeriodo = `Reporte Anual Completo - Año ${anioActual}`;
+            } else if (tipo === 'semestre') {
+                mesesPeriodo = param === 1 ? [1,2,3,4,5,6] : [7,8,9,10,11,12];
+                tituloPeriodo = `Reporte Semestre ${param} (${param === 1 ? 'Enero - Junio' : 'Julio - Diciembre'}) ${anioActual}`;
+            } else if (tipo === 'trimestre') {
+                mesesPeriodo = param === 1 ? [1,2,3] : param === 2 ? [4,5,6] : param === 3 ? [7,8,9] : [10,11,12];
+                let nombresQ = ["Q1 (Ene - Mar)", "Q2 (Abr - Jun)", "Q3 (Jul - Sep)", "Q4 (Oct - Dic)"];
+                tituloPeriodo = `Reporte ${nombresQ[param-1]} ${anioActual}`;
+            } else if (tipo === 'mes') {
+                mesesPeriodo = [param];
+                tituloPeriodo = `Reporte Ejecutivo - ${mesesNombres[param-1]} ${anioActual}`;
+            }
+
+            filtrados = pedidos.filter(p => mesesPeriodo.includes(p.mes) && p.estado === 'Facturado');
+            let metaPeriodo = mesesPeriodo.reduce((sum, m) => sum + (datos.metas[m] || 0), 0);
+            let ventaPeriodo = filtrados.reduce((sum, p) => sum + p.monto, 0);
+            let cumpPeriodo = metaPeriodo > 0 ? (ventaPeriodo / metaPeriodo) : 0;
+
+            document.getElementById('reporteSubTitulo').innerText = tituloPeriodo;
+            document.getElementById('reporteInfoIngeniero').innerText = `Gestión Comercial generada para este período.`;
+            document.getElementById('reporteModalMeta').innerText = formatoCOP.format(metaPeriodo);
+            document.getElementById('reporteModalVenta').innerText = formatoCOP.format(ventaPeriodo);
+            
+            let badgeClass = cumpPeriodo >= 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
+            document.getElementById('reporteModalCump').innerHTML = `<span class="px-4 py-1.5 rounded-full text-base font-bold ${badgeClass}">${(cumpPeriodo * 100).toFixed(1)}%</span>`;
+            document.getElementById('reporteConteoVentas').innerText = `${filtrados.length} facturas vinculadas`;
+
+            const tbody = document.getElementById('tablaReporteDetalle');
+            tbody.innerHTML = '';
+            if (filtrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-6 text-center font-semibold text-slate-400">No hay ventas facturadas registradas para este período.</td></tr>';
+            } else {
+                filtrados.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 py-3 font-semibold text-slate-700">${mesesNombres[p.mes - 1]}</td>
+                            <td class="px-5 py-3 font-black text-slate-800">${p.numero}</td>
+                            <td class="px-5 py-3">${p.cliente}</td>
+                            <td class="px-5 py-3 font-bold text-blue-700">${formatoCOP.format(p.monto)}</td>
+                            <td class="px-5 py-3"><span class="px-2.5 py-1 text-xs rounded-full font-bold bg-green-100 text-green-700">${p.estado}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('modalDetallePeriodo').classList.remove('hidden');
+            renderizarGraficoDona('chartReporteModal', cumpPeriodo);
+        }
+
+        function cerrarDetallePeriodo() {
+            document.getElementById('modalDetallePeriodo').classList.add('hidden');
+            document.body.classList.remove('imprimiendo-modal');
+        }
+
+        function irAVistaPrincipal() {
+            vistaActual = "main";
+            cancelarEdicion();
+            actualizarSistema();
+        }
+
+        function verTrimestre(qId) {
+            trimestreSeleccionado = qId;
+            vistaActual = "quarter";
+            actualizarSistema();
+        }
+
+        function verMes(mId) {
+            mesSeleccionado = mId;
+            trimestreSeleccionado = Math.ceil(mId / 3); 
+            vistaActual = "month";
+            cancelarEdicion();
+            actualizarSistema();
+        }
+
+        function volverATrimestreActual() {
+            vistaActual = "quarter";
+            actualizarSistema();
+        }
+
+        function calcularFactorLiquidacion(cump) {
+            if (cump < 0.70) return 0.0;
+            if (cump >= 1.0) return cump;
+            let diferencia = cump - 0.70;
+            let factor = 0.55 + (diferencia / 0.30) * 0.45;
+            return factor;
+        }
+
+        function calcularComisionMes(cumplimiento, cfg) {
+            if (cumplimiento < 0.70) return { comisionMes: 0, arrastreMes: 0 };
+            let factor = calcularFactorLiquidacion(cumplimiento);
+            let comisionCalculada = cfg.base * factor;
+            if (comisionCalculada > cfg.tope) comisionCalculada = cfg.tope;
+            let comisionMes = comisionCalculada > cfg.base ? cfg.base : comisionCalculada;
+            let arrastreMes = comisionCalculada > cfg.base ? (comisionCalculada - cfg.base) : 0;
+            return { comisionMes, arrastreMes };
+        }
+
+        function calcularArrastreTrimestre(trimestreIndex, mesesTrimestre) {
+            let datos = dbAnios[anioActual];
+            if (!datos) return 0;
+            let metas = datos.metas;
+            let pedidos = datos.pedidos;
+            let cfg = datos.configComision;
+
+            let metaQ = mesesTrimestre.reduce((acc, m) => acc + (metas[m] || 0), 0);
+            let ventaQ = mesesTrimestre.reduce((acc, m) => acc + pedidos.filter(p => p.mes === m && p.estado === 'Facturado').reduce((sum, p) => sum + p.monto, 0), 0);
+            let cumplimientoQ = metaQ > 0 ? (ventaQ / metaQ) : 0;
+
+            if (cumplimientoQ >= 1.0) {
+                return mesesTrimestre.reduce((acc, m) => {
+                    let factorQ = calcularFactorLiquidacion(cumplimientoQ);
+                    let comCalcGlobal = cfg.base * factorQ;
+                    if (comCalcGlobal > cfg.tope) comCalcGlobal = cfg.tope;
+                    let arrM = comCalcGlobal > cfg.base ? (comCalcGlobal - cfg.base) : 0;
+                    return acc + arrM;
+                }, 0);
+            } else {
+                return mesesTrimestre.reduce((acc, m) => {
+                    let metaM = metas[m] || 0;
+                    let ventaM = pedidos.filter(p => p.mes === m && p.estado === 'Facturado').reduce((sum, p) => sum + p.monto, 0);
+                    let cumpM = metaM > 0 ? (ventaM / metaM) : 0;
+                    return acc + calcularComisionMes(cumpM, cfg).arrastreMes;
+                }, 0);
+            }
+        }
+
+        function calcularComisionAnualTotal() {
+            let datos = dbAnios[anioActual];
+            if (!datos) return 0;
+            let metas = datos.metas;
+            let pedidos = datos.pedidos;
+            let cfg = datos.configComision;
+
+            let totalAnual = 0;
+            const trimestres = [ { meses: [1,2,3] }, { meses: [4,5,6] }, { meses: [7,8,9] }, { meses: [10,11,12] } ];
+
+            trimestres.forEach(q => {
+                let metaQ = q.meses.reduce((acc, m) => acc + (metas[m] || 0), 0);
+                let ventaQ = q.meses.reduce((acc, m) => acc + pedidos.filter(p => p.mes === m && p.estado === 'Facturado').reduce((sum, p) => sum + p.monto, 0), 0);
+                let cumplimientoQ = metaQ > 0 ? (ventaQ / metaQ) : 0;
+
+                if (cumplimientoQ >= 1.0) {
+                    q.meses.forEach(m => {
+                        let factorQ = calcularFactorLiquidacion(cumplimientoQ);
+                        let comCalcGlobal = cfg.base * factorQ;
+                        if (comCalcGlobal > cfg.tope) comCalcGlobal = cfg.tope;
+                        let comMes = comCalcGlobal > cfg.base ? cfg.base : comCalcGlobal;
+                        let arrMes = comCalcGlobal > cfg.base ? (comCalcGlobal - cfg.base) : 0;
+                        totalAnual += (comMes + arrMes);
+                    });
+                } else {
+                    q.meses.forEach(m => {
+                        let metaM = metas[m] || 0;
+                        let ventaM = pedidos.filter(p => p.mes === m && p.estado === 'Facturado').reduce((sum, p) => sum + p.monto, 0);
+                        let cumpM = metaM > 0 ? (ventaM / metaM) : 0;
+                        let resM = calcularComisionMes(cumpM, cfg);
+                        totalAnual += (resM.comisionMes + resM.arrastreMes);
+                    });
+                }
+            });
+            return totalAnual;
+        }
+
+        function actualizarSistema() {
+            document.getElementById('lblAnioActivo').innerText = anioActual;
+            document.getElementById('printAnioNombre').innerText = anioActual;
+            document.querySelectorAll('.printAnioModal').forEach(el => el.innerText = anioActual);
+
+            document.getElementById('subviewMain').classList.add('hidden');
+            document.getElementById('subviewQuarter').classList.add('hidden');
+            document.getElementById('subviewMonth').classList.add('hidden');
+
+            if (vistaActual === "main") {
+                document.getElementById('subviewMain').classList.remove('hidden');
+                renderizarVistaMain();
+            } else if (vistaActual === "quarter") {
+                document.getElementById('subviewQuarter').classList.remove('hidden');
+                renderizarVistaQuarter();
+            } else if (vistaActual === "month") {
+                document.getElementById('subviewMonth').classList.remove('hidden');
+                renderizarVistaMonth();
+            }
+        }
+
+        function renderizarVistaMain() {
+            let datos = dbAnios[anioActual];
+            if (!datos) return;
+            let metas = datos.metas;
+            let pedidos = datos.pedidos;
+
+            let metaAnual = 0, ventaAnual = 0, conteoAnual = 0;
+            for(let i=1; i<=12; i++) {
+                metaAnual += metas[i] || 0;
+                let facturadosMes = pedidos.filter(p => p.mes === i && p.estado === 'Facturado');
+                ventaAnual += facturadosMes.reduce((s, p) => s + p.monto, 0);
+                conteoAnual += facturadosMes.length;
+            }
+            let cumpAnual = metaAnual > 0 ? (ventaAnual / metaAnual) : 0;
+            let comisionAnualTotal = calcularComisionAnualTotal();
+
+            document.getElementById('mainVentaAnual').innerText = formatoCOP.format(ventaAnual);
+            document.getElementById('mainMetaAnual').innerText = formatoCOP.format(metaAnual);
+            document.getElementById('mainConteoAnual').innerText = conteoAnual;
+            document.getElementById('mainCumpAnualBadge').innerText = (cumpAnual * 100).toFixed(1) + '%';
+            document.getElementById('mainComisionAnual').innerText = formatoCOP.format(comisionAnualTotal);
+            renderizarGraficoDona('chartAnio', cumpAnual);
+
+            let metaS1 = [1,2,3,4,5,6].reduce((a,m) => a + (metas[m] || 0), 0);
+            let facturadosS1 = pedidos.filter(p => p.mes >= 1 && p.mes <= 6 && p.estado === 'Facturado');
+            let ventaS1 = facturadosS1.reduce((s,p)=>s+p.monto,0);
+            let conteoS1 = facturadosS1.length;
+            let cumpS1 = metaS1 > 0 ? (ventaS1 / metaS1) : 0;
+            document.getElementById('mainVentaS1').innerText = formatoCOP.format(ventaS1);
+            document.getElementById('mainMetaS1').innerText = formatoCOP.format(metaS1);
+            document.getElementById('mainConteos1').innerText = conteoS1;
+            document.getElementById('mainCumpS1').innerText = (cumpS1 * 100).toFixed(1) + '%';
+            renderizarGraficoDona('chartS1', cumpS1);
+
+            let metaS2 = [7,8,9,10,11,12].reduce((a,m) => a + (metas[m] || 0), 0);
+            let facturadosS2 = pedidos.filter(p => p.mes >= 7 && p.mes <= 12 && p.estado === 'Facturado');
+            let ventaS2 = facturadosS2.reduce((s,p)=>s+p.monto,0);
+            let conteoS2 = facturadosS2.length;
+            let cumpS2 = metaS2 > 0 ? (ventaS2 / metaS2) : 0;
+            document.getElementById('mainVentaS2').innerText = formatoCOP.format(ventaS2);
+            document.getElementById('mainMetaS2').innerText = formatoCOP.format(metaS2);
+            document.getElementById('mainConteo2').innerText = conteoS2;
+            document.getElementById('mainCumpS2').innerText = (cumpS2 * 100).toFixed(1) + '%';
+            renderizarGraficoDona('chartS2', cumpS2);
+
+            const contenedorQ = document.getElementById('contenedorTarjetasTrimestres');
+            contenedorQ.innerHTML = '';
+            const trimestresInfo = [
+                { id: 1, nombre: "Q1 (Ene - Mar)", meses: [1, 2, 3] },
+                { id: 2, nombre: "Q2 (Abr - Jun)", meses: [4, 5, 6] },
+                { id: 3, nombre: "Q3 (Jul - Sep)", meses: [7, 8, 9] },
+                { id: 4, nombre: "Q4 (Oct - Dic)", meses: [10, 11, 12] }
+            ];
+
+            trimestresInfo.forEach(q => {
+                let metaQ = q.meses.reduce((acc, m) => acc + (metas[m] || 0), 0);
+                let facturadosQ = pedidos.filter(p => q.meses.includes(p.mes) && p.estado === 'Facturado');
+                let ventaQ = facturadosQ.reduce((s, p) => s + p.monto, 0);
+                let conteoQ = facturadosQ.length;
+                let cumpQ = metaQ > 0 ? (ventaQ / metaQ) : 0;
+                let brechaQ = ventaQ - metaQ;
+                let arrastreQ = calcularArrastreTrimestre(q.id, q.meses);
+
+                contenedorQ.innerHTML += `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 transition-all hover:shadow-md space-y-2 group">
+                        <div class="flex justify-between items-center">
+                            <span onclick="verTrimestre(${q.id})" class="font-bold text-slate-700 hover:text-blue-600 cursor-pointer" title="Gestionar meses de este trimestre">${q.nombre}</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded ${cumpQ >= 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${(cumpQ * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs text-slate-500 space-y-1">
+                                <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-slate-200 shadow-sm">
+                                    <span class="font-bold text-slate-700 flex items-center gap-1"><i class="fa-solid fa-bag-shopping text-blue-600"></i> ${conteoQ} ventas</span>
+                                    <button onclick="abrirDetallePeriodo('trimestre', ${q.id})" class="no-print font-bold text-blue-600 hover:underline ml-1 flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-file-contract"></i> Reporte</button>
+                                </div>
+                                <p>Meta: <span class="font-semibold text-slate-700">${formatoCOP.format(metaQ)}</span></p>
+                                <p>Venta: <span class="font-semibold text-slate-700">${formatoCOP.format(ventaQ)}</span></p>
+                            </div>
+                            <div class="w-16 h-16 relative flex-shrink-0 drop-shadow-2xs">
+                                <canvas id="chartQ_${q.id}"></canvas>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-500 pt-1 border-t border-slate-200 space-y-1">
+                            <p>Brecha: <span class="font-semibold ${brechaQ >= 0 ? 'text-green-600' : 'text-red-500'}">${formatoCOP.format(brechaQ)}</span></p>
+                            <p>Arrastre: <span class="font-bold text-green-600">${formatoCOP.format(arrastreQ)}</span></p>
+                        </div>
+                        <button onclick="verTrimestre(${q.id})" class="no-print w-full bg-slate-200 hover:bg-blue-600 hover:text-white text-slate-700 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer">
+                            Gestionar Meses <i class="fa-solid fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            trimestresInfo.forEach(q => {
+                let metaQ = q.meses.reduce((acc, m) => acc + (metas[m] || 0), 0);
+                let facturadosQ = pedidos.filter(p => q.meses.includes(p.mes) && p.estado === 'Facturado');
+                let ventaQ = facturadosQ.reduce((s, p) => s + p.monto, 0);
+                let cumpQ = metaQ > 0 ? (ventaQ / metaQ) : 0;
+                renderizarGraficoDona(`chartQ_${q.id}`, cumpQ);
+            });
+
+            const contMeses = document.getElementById('contenedorResumenMeses');
+            contMeses.innerHTML = '';
+            for(let m = 1; m <= 12; m++) {
+                let metaM = metas[m] || 0;
+                let facturadosM = pedidos.filter(p => p.mes === m && p.estado === 'Facturado');
+                let ventaM = facturadosM.reduce((s, p) => s + p.monto, 0);
+                let cumpM = metaM > 0 ? (ventaM / metaM) : 0;
+                contMeses.innerHTML += `
+                    <div onclick="verMes(${m})" title="Gestionar registros de ${mesesNombres[m-1]}" class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-1 mb-2 group-hover:border-blue-200 transition-colors">
+                            <span class="font-bold text-slate-700 text-xs uppercase group-hover:text-blue-600 transition-colors">${mesesNombres[m-1].substring(0,3)}</span>
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${cumpM >= 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${(cumpM * 100).toFixed(0)}%</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 space-y-1">
+                            <p class="flex justify-between"><span>M:</span> <span class="font-semibold text-slate-700">${formatoCOP.format(metaM)}</span></p>
+                            <p class="flex justify-between"><span>V:</span> <span class="font-semibold ${ventaM >= metaM ? 'text-green-600' : 'text-slate-700'}">${formatoCOP.format(ventaM)}</span></p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderizarVistaQuarter() {
+            let datos = dbAnios[anioActual];
+            if (!datos) return;
+            let metas = datos.metas;
+            let pedidos = datos.pedidos;
+            const trimestresInfo = {
+                1: { nombre: "Q1 (Enero - Marzo)", meses: [1, 2, 3] },
+                2: { nombre: "Q2 (Abril - Junio)", meses: [4, 5, 6] },
+                3: { nombre: "Q3 (Julio - Septiembre)", meses: [7, 8, 9] },
+                4: { nombre: "Q4 (Octubre - Diciembre)", meses: [10, 11, 12] }
+            };
+
+            let qInfo = trimestresInfo[trimestreSeleccionado];
+            let metaQ = qInfo.meses.reduce((a, m) => a + (metas[m] || 0), 0);
+            let facturadosQ = pedidos.filter(p => qInfo.meses.includes(p.mes) && p.estado === 'Facturado');
+            let ventaQ = facturadosQ.reduce((s, p) => s + p.monto, 0);
+            let conteoQ = facturadosQ.length;
+            let cumpQ = metaQ > 0 ? (ventaQ / metaQ) : 0;
+
+            document.getElementById('qTitle').innerText = `Detalle de ${qInfo.nombre} (${conteoQ} ventas facturadas)`;
+            let badge = document.getElementById('qBadge');
+            badge.innerText = `Cumplimiento Q: ${(cumpQ * 100).toFixed(1)}%`;
+            badge.className = `px-3 py-1 text-xs rounded-full font-bold ${cumpQ >= 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`;
+
+            const container = document.getElementById('qMesesContainer');
+            container.innerHTML = '';
+            qInfo.meses.forEach(m => {
+                let metaM = metas[m] || 0;
+                let facturadosMes = pedidos.filter(p => p.mes === m && p.estado === 'Facturado');
+                let ventaM = facturadosMes.reduce((s, p) => s + p.monto, 0);
+                let conteoM = facturadosMes.length;
+                let cumpM = metaM > 0 ? (ventaM / metaM) : 0;
+                container.innerHTML += `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-500 transition-all hover:shadow-md space-y-3 group">
+                        <div class="flex justify-between items-center">
+                            <h3 onclick="verMes(${m})" class="font-extrabold text-lg text-slate-800 hover:text-blue-600 cursor-pointer">${mesesNombres[m-1]}</h3>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full ${cumpM >= 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${(cumpM * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs text-slate-500 space-y-1.5">
+                                <div class="flex items-center gap-1.5 bg-slate-50 p-2 rounded border border-slate-200 shadow-sm">
+                                    <span class="font-bold text-slate-700 flex items-center gap-1"><i class="fa-solid fa-bag-shopping text-blue-600"></i> ${conteoM} ventas</span>
+                                    <button onclick="abrirDetallePeriodo('mes', ${m})" class="no-print font-bold text-blue-600 hover:underline ml-1 flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-file-contract"></i> Reporte</button>
+                                </div>
+                                <p>Meta: <span class="font-semibold text-slate-700">${formatoCOP.format(metaM)}</span></p>
+                                <p>Facturado: <span class="font-semibold text-slate-700">${formatoCOP.format(ventaM)}</span></p>
+                            </div>
+                            <div class="w-20 h-20 relative flex-shrink-0 drop-shadow-sm">
+                                <canvas id="chartMes_${m}"></canvas>
+                            </div>
+                        </div>
+                        <button onclick="verMes(${m})" class="no-print w-full bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer">
+                            Gestionar Pedidos del Mes <i class="fa-solid fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            qInfo.meses.forEach(m => {
+                let metaM = metas[m] || 0;
+                let facturadosMes = pedidos.filter(p => p.mes === m && p.estado === 'Facturado');
+                let ventaM = facturadosMes.reduce((s, p) => s + p.monto, 0);
+                let cumpM = metaM > 0 ? (ventaM / metaM) : 0;
+                renderizarGraficoDona(`chartMes_${m}`, cumpM);
+            });
+        }
+
+        function renderizarVistaMonth() {
+            let datos = dbAnios[anioActual];
+            if (!datos) return;
+            let metas = datos.metas;
+            let pedidos = datos.pedidos;
+            let cfg = datos.configComision;
+
+            document.getElementById('mTitle').innerText = `Gestión de Pedidos - ${mesesNombres[mesSeleccionado-1]} ${anioActual}`;
+            let metaActual = metas[mesSeleccionado] || 0;
+            document.getElementById('lblMetaMes').innerText = formatoCOP.format(metaActual);
+            document.getElementById('mBaseLbl').innerText = formatoCOP.format(cfg.base);
+
+            const pedidosMes = pedidos.filter(p => p.mes === mesSeleccionado);
+            let facturadosMes = pedidosMes.filter(p => p.estado === 'Facturado');
+            let facturado = facturadosMes.reduce((s, p) => s + p.monto, 0);
+            let conteoMes = facturadosMes.length;
+
+            document.getElementById('lblConteoMes').innerText = conteoMes;
+            let metaM = metas[mesSeleccionado] || 1;
+            let cumpReal = metaM > 0 ? (facturado / metaM) : 0;
+            let resComision = calcularComisionMes(cumpReal, cfg);
+
+            let tIdx = mesSeleccionado <= 3 ? 1 : mesSeleccionado <= 6 ? 2 : mesSeleccionado <= 9 ? 3 : 4;
+            let tMeses = tIdx === 1 ? [1,2,3] : tIdx === 2 ? [4,5,6] : tIdx === 3 ? [7,8,9] : [10,11,12];
+            let arrastreQ = calcularArrastreTrimestre(tIdx, tMeses);
+
+            document.getElementById('mKpiFacturado').innerText = formatoCOP.format(facturado);
+            document.getElementById('mKpiPorcentaje').innerText = (cumpReal * 100).toFixed(1) + '%';
+            document.getElementById('mKpiComision').innerText = formatoCOP.format(resComision.comisionMes);
+            document.getElementById('mKpiArrastreTrimestre').innerText = formatoCOP.format(arrastreQ);
+            document.getElementById('contadorRegistros').innerText = pedidosMes.length;
+            renderizarGraficoDona('chartMesKpi', cumpReal);
+
+            const tbody = document.getElementById('tablaPedidos');
+            tbody.innerHTML = '';
+            if (pedidosMes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-slate-400">No hay registros para este mes.</td></tr>';
+            } else {
+                pedidosMes.forEach(p => {
+                    let badge = p.estado === 'Facturado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
+                    let btnEstado = p.estado === 'Montado' 
+                        ? `<button onclick="cambiarEstado(${p.id}, 'Facturado')" class="text-blue-500 hover:text-blue-700 mr-3" title="Facturar"><i class="fa-solid fa-check-double"></i></button>`
+                        : `<button onclick="cambiarEstado(${p.id}, 'Montado')" class="text-slate-400 hover:text-slate-600 mr-3" title="Pipeline"><i class="fa-solid fa-rotate-left"></i></button>`;
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4 font-bold text-slate-700">${p.numero}</td>
+                            <td class="px-6 py-4">${p.cliente}</td>
+                            <td class="px-6 py-4 font-semibold">${formatoCOP.format(p.monto)}</td>
+                            <td class="px-6 py-4"><span class="px-2 py-1 text-xs rounded-full font-bold ${badge}">${p.estado}</span></td>
+                            <td class="px-6 py-4 text-right whitespace-nowrap no-print">
+                                <button onclick="editarPedido(${p.id})" class="text-indigo-500 hover:text-indigo-700 mr-3" title="Editar"><i class="fa-solid fa-pencil"></i></button>
+                                ${btnEstado}
+                                <button onclick="eliminarPedido(${p.id})" class="text-red-400 hover:text-red-600" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        document.getElementById('formPedido').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let datos = dbAnios[anioActual];
+            let num = document.getElementById('idPedido').value.toUpperCase();
+            let cli = document.getElementById('cliente').value;
+            let mnt = parseFloat(document.getElementById('monto').value);
+            let est = document.getElementById('estado').value;
+
+            if (pedidoEditandoId !== null) {
+                let idx = datos.pedidos.findIndex(p => p.id === pedidoEditandoId);
+                if (idx !== -1) {
+                    datos.pedidos[idx].numero = num;
+                    datos.pedidos[idx].cliente = cli;
+                    datos.pedidos[idx].monto = mnt;
+                    datos.pedidos[idx].estado = est;
+                }
+                cancelarEdicion();
+            } else {
+                datos.pedidos.push({
+                    id: Date.now(), numero: num, cliente: cli, monto: mnt, mes: mesSeleccionado, estado: est
+                });
+                this.reset();
+            }
+            guardarYRefrescar();
+        });
+
+        function editarPedido(id) {
+            let p = dbAnios[anioActual].pedidos.find(item => item.id === id);
+            if(p) {
+                document.getElementById('idPedido').value = p.numero;
+                document.getElementById('cliente').value = p.cliente;
+                document.getElementById('monto').value = p.monto;
+                document.getElementById('estado').value = p.estado;
+                pedidoEditandoId = id;
+                let btn = document.getElementById('btnGuardarPedido');
+                btn.innerText = "Actualizar";
+                btn.className = "w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg";
+                document.getElementById('btnCancelarEdicion').classList.remove('hidden');
+            }
+        }
+
+        function cancelarEdicion() {
+            pedidoEditandoId = null;
+            document.getElementById('formPedido').reset();
+            let btn = document.getElementById('btnGuardarPedido');
+            btn.innerText = "Guardar";
+            btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg";
+            document.getElementById('btnCancelarEdicion').classList.add('hidden');
+        }
+
+        function cambiarEstado(id, nuevoEst) {
+            let p = dbAnios[anioActual].pedidos.find(item => item.id === id);
+            if(p) { p.estado = nuevoEst; guardarYRefrescar(); }
+        }
+
+        function eliminarPedido(id) {
+            if(confirm("¿Eliminar registro?")) {
+                let datos = dbAnios[anioActual];
+                datos.pedidos = datos.pedidos.filter(item => item.id !== id);
+                guardarYRefrescar();
+                if(pedidoEditandoId === id) cancelarEdicion();
+            }
+        }
+
+        function abrirConfiguracion() {
+            let datos = dbAnios[anioActual];
+            document.getElementById('cfgAnioLabel').innerText = anioActual;
+            document.getElementById('paramBase').value = datos.configComision.base;
+            document.getElementById('paramTope').value = datos.configComision.tope;
+            
+            const cont = document.getElementById('inputsMetasMeses');
+            cont.innerHTML = '';
+            mesesNombres.forEach((nombre, idx) => {
+                let m = idx + 1;
+                cont.innerHTML += `
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500">${nombre}</label>
+                        <input type="number" id="meta_mes_${m}" value="${datos.metas[m] || 0}" class="w-full mt-1 p-2 border rounded-lg text-sm font-semibold">
+                    </div>
+                `;
+            });
+            document.getElementById('modalConfig').classList.remove('hidden');
+        }
+
+        function cerrarConfiguracion() {
+            document.getElementById('modalConfig').classList.add('hidden');
+        }
+
+        function guardarConfiguracion() {
+            let datos = dbAnios[anioActual];
+            datos.configComision.base = parseFloat(document.getElementById('paramBase').value) || 2688000;
+            datos.configComision.tope = parseFloat(document.getElementById('paramTope').value) || 4300800;
+            for(let i=1; i<=12; i++) {
+                let val = parseFloat(document.getElementById(`meta_mes_${i}`).value);
+                if(!isNaN(val)) datos.metas[i] = val;
+            }
+            guardarYRefrescar();
+            cerrarConfiguracion();
+        }
+
+        function crearNuevoAnio() {
+            let a = document.getElementById('nuevoAnioInput').value.trim();
+            if(!a || isNaN(a)) { alert("Año inválido"); return; }
+            if(dbAnios[a]) { alert("El año ya existe"); return; }
+
+            let metasNuevas = {};
+            for(let i=1; i<=12; i++) metasNuevas[i] = 0;
+            dbAnios[a] = { metas: metasNuevas, configComision: { base: 2688000, tope: 4300800 }, pedidos: [] };
+            anioActual = a;
+            localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
+            localStorage.setItem('geovision_anio_activo', anioActual);
+            document.getElementById('nuevoAnioInput').value = '';
+            
+            cerrarConfiguracion();
+            poblarSelectLandingAnios();
+            actualizarSistema();
+            subirACloud(); // Actualiza la nube con el nuevo año.
+        }
+    </script>
+</body>
+</html>
