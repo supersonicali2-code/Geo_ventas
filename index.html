@@ -1401,23 +1401,23 @@
             subirACloud();
             showToast(`Año ${a} creado exitosamente.`);
         }
-    <script>
-        // --- AUTO-SINCRONIZACIÓN AL RECUPERAR CONEXIÓN ---
-        window.addEventListener('online', () => {
-            showToast("Conexión restablecida. Sincronizando datos...", "success");
-            sincronizarDesdeCloud(false); 
-            subirACloud();
-        });
+        
+ // --- AUTO-SINCRONIZACIÓN AL RECUPERAR CONEXIÓN ---
+    window.addEventListener('online', () => {
+        showToast("Conexión restablecida. Sincronizando datos...", "success");
+        sincronizarDesdeCloud(false); 
+        subirACloud();
+    });
 
-        window.addEventListener('offline', () => {
-            showToast("Sin conexión a internet. Trabajando en modo offline.", "error");
-        });
+    window.addEventListener('offline', () => {
+        showToast("Sin conexión a internet. Trabajando en modo offline.", "error");
+    });
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-            .then(() => console.log('Service Worker registrado correctamente.'))
-            .catch((err) => console.log('Error en Service Worker:', err));
-        }
-    </script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker registrado correctamente.'))
+        .catch((err) => console.log('Error en Service Worker:', err));
+    }
+</script>
 </body>
 </html>
