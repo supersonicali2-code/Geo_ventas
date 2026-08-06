@@ -565,11 +565,12 @@ let mesSeleccionado = 8;
 let pedidoEditandoId = null;
 let chartInstances = {};
 
+// Definimos nuevamente la URL base para que no falle ninguna línea
+let cloudUrl = "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a4f57";
+
 // --- DESCARGAR DESDE LA NUBE (GET) ---
 function sincronizarDesdeCloud(mostrarAviso = true) {
-    const urlGet = "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57";
-
-    fetch(urlGet)
+    fetch(cloudUrl)
         .then(response => {
             if (!response.ok) throw new Error("No se pudo conectar con la nube");
             return response.json();
@@ -597,7 +598,8 @@ function sincronizarDesdeCloud(mostrarAviso = true) {
 
 // --- SUBIR A LA NUBE (PUT) ---
 function subirACloud() {
-    const urlPut = "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57?apiKey=%your api key%";
+    // Si requieres clave, asegúrate de reemplazar %your api key% por tu llave real
+    const urlPut = `${cloudUrl}?apiKey=https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57?apiKey=%your api key%`;
 
     const datosGuardar = localStorage.getItem('geovision_multianual_db') || "{}";
 
@@ -619,7 +621,6 @@ function subirACloud() {
         }
     });
 }
-
         // --- SISTEMA DE NOTIFICACIONES TOAST (PRO) ---
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
