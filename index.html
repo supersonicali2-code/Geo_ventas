@@ -1401,6 +1401,12 @@
             subirACloud();
             showToast(`Año ${a} creado exitosamente.`);
         }
-    </script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker registrado correctamente.'))
+        .catch((err) => console.log('Error en Service Worker:', err));
+    }
+</script>
 </body>
 </html>
