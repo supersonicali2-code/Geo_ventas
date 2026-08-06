@@ -556,7 +556,10 @@
     </div>
 
     <script>
-        const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+        // --- CONFIGURACIÓN GLOBAL INICIAL ---
+let cloudUrl = "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a4f57";
+
+const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 let ingenieroActual = localStorage.getItem('geovision_ingeniero') || "";
 let anioActual = localStorage.getItem('geovision_anio_activo') || "2026";
 let vistaActual = "main";
