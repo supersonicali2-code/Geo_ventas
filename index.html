@@ -322,6 +322,24 @@
                                 <label class="block text-xs font-semibold text-slate-500 uppercase">Monto ($ COP - Permite Negativos)</label>
                                 <input type="number" id="monto" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Valor">
                             </div>
+                            <!-- NUEVO: Selector de Mes para cambiar o asignar el mes libremente -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase">Mes Asignado</label>
+                                <select id="selectMesPedido" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none font-semibold text-slate-700">
+                                    <option value="1">Enero</option>
+                                    <option value="2">Febrero</option>
+                                    <option value="3">Marzo</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Mayo</option>
+                                    <option value="6">Junio</option>
+                                    <option value="7">Julio</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-500 uppercase">Estado</label>
                                 <select id="estado" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
@@ -531,7 +549,7 @@
         let chartInstances = {};
 
         let cloudGetUrl = localStorage.getItem('geovision_cloud_url') || "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a4f57";
-        let apiKeyCloud = "674ca75d-2cb7-4b2f-8d47-96628ff180df"; // Si no usas llave real, déjalo así o bórralo
+        let apiKeyCloud = "674ca75d-2cb7-4b2f-8d47-96628ff180df";
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
@@ -540,7 +558,7 @@
             toast.className = `${color} text-white px-6 py-3 rounded-lg shadow-2xl pointer-events-auto transform transition-all duration-300 text-sm font-bold`;
             toast.innerText = message;
             container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3500);
         }
 
         const metas2026Default = {
@@ -614,7 +632,7 @@
             }
             try {
                 const response = await fetch(urlGet);
-                if (!response.ok) throw new Error("Error en conexión con la nube");
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 const data = await response.json();
                 
                 if (data && Object.keys(data).length > 0) {
@@ -632,7 +650,7 @@
                 }
             } catch (error) {
                 console.error("Error al sincronizar:", error);
-                if(mostrarAlerta) showToast("Hubo un problema descargando datos de la nube.", "error");
+                if(mostrarAlerta) showToast("Error nube: " + error.message, "error");
             }
         }
 
@@ -648,11 +666,11 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dbAnios)
                 });
-                if (!response.ok) throw new Error("Error al subir a la nube");
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 console.log("Datos sincronizados en la nube exitosamente.");
             } catch (error) {
                 console.error("Fallo la subida a la nube:", error);
-                showToast("Error al guardar en la nube.", "error");
+                showToast("Error al guardar en la nube: " + error.message, "error");
             }
         }
 
@@ -1204,6 +1222,9 @@
             document.getElementById('lblMetaMes').innerText = formatoCOP.format(metaActual);
             document.getElementById('mBaseLbl').innerText = formatoCOP.format(cfg.base);
 
+            // Preseleccionar el mes actual en el selector del formulario
+            document.getElementById('selectMesPedido').value = mesSeleccionado;
+
             const pedidosMes = pedidos.filter(p => p.mes === mesSeleccionado);
             let facturadosMes = pedidosMes.filter(p => p.estado === 'Facturado');
             let facturado = facturadosMes.reduce((s, p) => s + p.monto, 0);
@@ -1259,22 +1280,25 @@
             let num = document.getElementById('idPedido').value.toUpperCase();
             let cli = document.getElementById('cliente').value;
             let mnt = parseFloat(document.getElementById('monto').value);
+            let mesAsignado = parseInt(document.getElementById('selectMesPedido').value) || mesSeleccionado;
             let est = document.getElementById('estado').value;
 
             if (pedidoEditandoId !== null) {
                 let idx = datos.pedidos.findIndex(p => p.id === pedidoEditandoId);
                 if (idx !== -1) {
                     datos.pedidos[idx].numero = num;
-                    datos.pedidos[idx].cliente = cli;
+                    datos.pedidos.[idx].cliente = cli;
                     datos.pedidos[idx].monto = mnt;
+                    datos.pedidos[idx].mes = mesAsignado; // Permite cambiar de mes al editar
                     datos.pedidos[idx].estado = est;
                 }
                 cancelarEdicion();
             } else {
                 datos.pedidos.push({
-                    id: Date.now(), numero: num, cliente: cli, monto: mnt, mes: mesSeleccionado, estado: est
+                    id: Date.now(), numero: num, cliente: cli, monto: mnt, mes: mesAsignado, estado: est
                 });
                 this.reset();
+                document.getElementById('selectMesPedido').value = mesSeleccionado;
             }
             guardarYRefrescar();
         });
@@ -1285,18 +1309,21 @@
                 document.getElementById('idPedido').value = p.numero;
                 document.getElementById('cliente').value = p.cliente;
                 document.getElementById('monto').value = p.monto;
+                document.getElementById('selectMesPedido').value = p.mes; // Carga el mes actual del pedido
                 document.getElementById('estado').value = p.estado;
                 pedidoEditandoId = id;
                 let btn = document.getElementById('btnGuardarPedido');
                 btn.innerText = "Actualizar";
                 btn.className = "w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg cursor-pointer";
                 document.getElementById('btnCancelarEdicion').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
         function cancelarEdicion() {
             pedidoEditandoId = null;
             document.getElementById('formPedido').reset();
+            document.getElementById('selectMesPedido').value = mesSeleccionado;
             let btn = document.getElementById('btnGuardarPedido');
             btn.innerText = "Guardar";
             btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer";
