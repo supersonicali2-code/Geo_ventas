@@ -647,8 +647,10 @@
 
         async function sincronizarDesdeCloud(mostrarAlerta = false) {
             if (!cloudGetUrl) return;
+            // Incluir la API Key también en la petición GET para evitar errores de autorización en dispositivos móviles
+            let urlGet = apiKeyCloud ? `${cloudGetUrl.split('?')[0]}?apiKey=${apiKeyCloud}` : cloudGetUrl;
             try {
-                const response = await fetch(cloudGetUrl);
+                const response = await fetch(urlGet);
                 if (!response.ok) throw new Error("Error en conexión con la nube");
                 const data = await response.json();
                 
@@ -656,7 +658,6 @@
                     const localVersion = dbAnios[anioActual]?.version || 0;
                     const cloudVersion = data[anioActual]?.version || 0;
 
-                    // Si el usuario presionó el botón manual (mostrarAlerta = true) O la versión en la nube es mayor
                     if (mostrarAlerta || cloudVersion > localVersion || !dbAnios[anioActual]) {
                         dbAnios = data;
                         localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
