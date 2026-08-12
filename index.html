@@ -566,8 +566,12 @@
         let pedidoEditandoId = null;
         let chartInstances = {};
 
-        // URL de la Nube (JSONStorage)
-        let cloudUrl = localStorage.getItem('geovision_cloud_url') || "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a4f57";
+        // URLs y credenciales de la Nube (JSONStorage)
+        let cloudGetUrl = localStorage.getItem('geovision_cloud_url') || "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a4f57";
+        
+        // Clave API para permitir escritura (PUT). 
+        // ⚠️ Si tu API key es necesaria para escribir, colócala dentro de las comillas abajo:
+        let apiKeyCloud = "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a8f57?apiKey=%your api key%"; 
 
         // --- SISTEMA DE NOTIFICACIONES TOAST (PRO) ---
         function showToast(message, type = 'success') {
@@ -628,8 +632,8 @@
         const mesesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
         document.addEventListener('DOMContentLoaded', () => {
-            if(cloudUrl) {
-                document.getElementById('inputCloudUrl').value = cloudUrl;
+            if(cloudGetUrl) {
+                document.getElementById('inputCloudUrl').value = cloudGetUrl;
                 sincronizarDesdeCloud(false); // Sincronización silenciosa inicial
             }
             verificarSesion();
@@ -639,15 +643,15 @@
         function guardarUrlNube() {
             const urlInput = document.getElementById('inputCloudUrl').value.trim();
             if(!urlInput) { showToast("Por favor ingresa un enlace válido.", "error"); return; }
-            cloudUrl = urlInput;
-            localStorage.setItem('geovision_cloud_url', cloudUrl);
+            cloudGetUrl = urlInput;
+            localStorage.setItem('geovision_cloud_url', cloudGetUrl);
             sincronizarDesdeCloud(true);
         }
 
         async function sincronizarDesdeCloud(mostrarAlerta = false) {
-            if (!cloudUrl) return;
+            if (!cloudGetUrl) return;
             try {
-                const response = await fetch(cloudUrl);
+                const response = await fetch(cloudGetUrl);
                 if (!response.ok) throw new Error("Error en conexión con la nube");
                 const data = await response.json();
                 
@@ -659,7 +663,7 @@
                         dbAnios = data;
                         localStorage.setItem('geovision_multianual_db', JSON.stringify(dbAnios));
                         actualizarSistema();
-                        if(mostrarAlerta) showToast("¡Datos actualizados desde la nube (versión más reciente)!");
+                        if(mostrarAlerta) showToast("¡Datos actualizados desde la nube!");
                     } else if (mostrarAlerta) {
                         showToast("La versión local ya se encuentra actualizada.");
                     }
@@ -671,9 +675,11 @@
         }
 
         async function subirACloud() {
-            if (!cloudUrl) return;
+            if (!cloudGetUrl) return;
+            // Construimos la URL de PUT incluyendo la API Key si está configurada
+            let urlPut = apiKeyCloud ? `${cloudGetUrl}?apiKey=${apiKeyCloud}` : cloudGetUrl;
             try {
-                const response = await fetch(cloudUrl, {
+                const response = await fetch(urlPut, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dbAnios)
@@ -682,6 +688,7 @@
                 console.log("Datos sincronizados en la nube exitosamente.");
             } catch (error) {
                 console.error("Fallo la subida a la nube:", error);
+                showToast("Error al guardar en la nube (Verifica tu API Key).", "error");
             }
         }
 
