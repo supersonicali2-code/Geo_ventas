@@ -17,24 +17,20 @@
             #viewLanding, nav, .no-print, form, input, select, footer { display: none !important; }
             .print-header { display: block !important; }
             
-            /* ---- REGLAS DE IMPRESIÓN NORMAL (VISTA PRINCIPAL) ---- */
             body:not(.imprimiendo-modal) #viewApp {
                 display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0;
             }
             body:not(.imprimiendo-modal) #modalDetallePeriodo { display: none !important; }
 
-            /* ---- REGLAS DE IMPRESIÓN DE REPORTE (MODAL AISLADO) ---- */
             body.imprimiendo-modal #viewApp { display: none !important; }
             body.imprimiendo-modal #modalDetallePeriodo {
                 display: block !important; position: relative !important; left: 0; top: 0; width: 100% !important; background: white !important; box-shadow: none !important;
             }
             body.imprimiendo-modal .print-modal-content { overflow: visible !important; max-height: none !important; padding: 0 !important; }
 
-            /* Solución al recuadro negro en las cantidades */
             .print-badge { background-color: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; }
             .print-badge * { color: #0f172a !important; }
             
-            /* Adaptar tarjetas a impresión limpia */
             .bg-gradient-to-br { background: white !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
             .bg-gradient-to-br * { color: #1e293b !important; }
             .bg-gradient-to-br .text-blue-400, .bg-gradient-to-br .text-yellow-400 { color: #2563eb !important; }
@@ -79,7 +75,6 @@
                 </button>
             </div>
         </div>
-        <!-- Pie de página Landing -->
         <footer class="mt-8 text-xs text-slate-500 font-medium tracking-wide">
             Desarrollado por Robert E. Muriel A.
         </footer>
@@ -88,7 +83,6 @@
     <!-- ==================== APLICACIÓN PRINCIPAL ==================== -->
     <div id="viewApp" class="hidden flex-1 flex flex-col">
         
-        <!-- Barra Superior -->
         <nav class="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-45">
             <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div class="flex items-center gap-3">
@@ -103,7 +97,6 @@
                         <span class="text-xs font-semibold text-slate-400">AÑO:</span>
                         <span id="lblAnioActivo" class="font-bold text-sm text-yellow-400">2026</span>
                     </div>
-                    <!-- Botón de Sincronización Manual Cloud -->
                     <button onclick="sincronizarDesdeCloud(true)" class="no-print bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 border border-blue-500/30 shadow-sm cursor-pointer" title="Sincronizar Nube Manualmente">
                         <i class="fa-solid fa-cloud-arrow-down"></i> <span class="hidden sm:inline">Nube</span>
                     </button>
@@ -122,7 +115,6 @@
 
         <main class="max-w-7xl mx-auto p-4 space-y-6 mt-2 flex-1 w-full">
 
-            <!-- Encabezado exclusivo para impresión de Pantalla Principal -->
             <div class="print-header hidden mb-6 p-4 border-b-2 border-slate-800">
                 <div class="flex justify-between items-center">
                     <div>
@@ -136,10 +128,9 @@
                 </div>
             </div>
 
-            <!-- ==================== SUB-VISTA A: MENÚ PRINCIPAL (PIRÁMIDE) ==================== -->
+            <!-- ==================== SUB-VISTA A: MENÚ PRINCIPAL ==================== -->
             <div id="subviewMain" class="space-y-6">
                 
-                <!-- NIVEL 1 (CÚSPIDE): AÑO CENTRADO -->
                 <div class="flex justify-center">
                     <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 rounded-3xl shadow-2xl border border-blue-500/40 w-full max-w-xl">
                         <div class="flex justify-between items-center border-b border-blue-500/30 pb-3">
@@ -148,7 +139,7 @@
                                 <span class="print-badge text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-blue-200 border border-blue-400/40 flex items-center gap-1">
                                     <i class="fa-solid fa-bag-shopping"></i> <span id="mainConteoAnual">0</span> ventas
                                 </span>
-                                <button onclick="abrirDetallePeriodo('anual')" class="no-print text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer flex items-center gap-1 shadow-sm" title="Ver detalle de ventas del año">
+                                <button onclick="abrirDetallePeriodo('anual')" class="no-print text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer flex items-center gap-1 shadow-sm">
                                     <i class="fa-solid fa-file-contract"></i> Ver Detalle y Gráficos
                                 </button>
                                 <span id="mainCumpAnualBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30">0%</span>
@@ -160,7 +151,6 @@
                                 <p class="text-xs text-slate-400 uppercase font-semibold">Venta Facturada Acumulada</p>
                                 <h3 class="text-2xl sm:text-3xl font-black text-white mt-1" id="mainVentaAnual">$0</h3>
                             </div>
-                            <!-- Gráfico Circular Anual Estilizado -->
                             <div class="w-24 h-24 relative flex-shrink-0 drop-shadow-[0_4px_10px_rgba(59,130,246,0.3)]">
                                 <canvas id="chartAnio"></canvas>
                             </div>
@@ -179,9 +169,7 @@
                     </div>
                 </div>
 
-                <!-- NIVEL 2 (MEDIO): SEMESTRES S1 Y S2 -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                    <!-- Semestre 1 -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-300 transition-all space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-bold text-slate-400 uppercase"><i class="fa-solid fa-calendar-days text-blue-600 mr-1"></i> Semestre 1 (Ene - Jun)</span>
@@ -189,7 +177,7 @@
                                 <span class="print-badge text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md border border-slate-200 flex items-center gap-1">
                                     <i class="fa-solid fa-bag-shopping text-slate-400"></i> <span id="mainConteos1">0</span> ventas
                                 </span>
-                                <button onclick="abrirDetallePeriodo('semestre', 1)" class="no-print text-xs font-bold px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center gap-1 cursor-pointer" title="Reporte y Gráfico S1">
+                                <button onclick="abrirDetallePeriodo('semestre', 1)" class="no-print text-xs font-bold px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center gap-1 cursor-pointer">
                                     <i class="fa-solid fa-file-contract"></i> Reporte
                                 </button>
                                 <span class="font-bold text-blue-600 text-xs px-2 py-0.5 bg-blue-50 rounded-full" id="mainCumpS1">0%</span>
@@ -206,7 +194,6 @@
                         </div>
                     </div>
 
-                    <!-- Semestre 2 -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-300 transition-all space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-bold text-slate-400 uppercase"><i class="fa-solid fa-calendar-days text-indigo-600 mr-1"></i> Semestre 2 (Jul - Dic)</span>
@@ -214,7 +201,7 @@
                                 <span class="print-badge text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md border border-slate-200 flex items-center gap-1">
                                     <i class="fa-solid fa-bag-shopping text-slate-400"></i> <span id="mainConteo2">0</span> ventas
                                 </span>
-                                <button onclick="abrirDetallePeriodo('semestre', 2)" class="no-print text-xs font-bold px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors flex items-center gap-1 cursor-pointer" title="Reporte y Gráfico S2">
+                                <button onclick="abrirDetallePeriodo('semestre', 2)" class="no-print text-xs font-bold px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors flex items-center gap-1 cursor-pointer">
                                     <i class="fa-solid fa-file-contract"></i> Reporte
                                 </button>
                                 <span class="font-bold text-indigo-600 text-xs px-2 py-0.5 bg-indigo-50 rounded-full" id="mainCumpS2">0%</span>
@@ -232,24 +219,18 @@
                     </div>
                 </div>
 
-                <!-- NIVEL 3 (BASE): LOS 4 TRIMESTRES -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h2 class="text-sm font-black text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-blue-600"></i> Desglose Trimestral (Haz clic en gestionar o ver reporte)
+                        <i class="fa-solid fa-chart-pie text-blue-600"></i> Desglose Trimestral
                     </h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="contenedorTarjetasTrimestres">
-                        <!-- Generado por JS -->
-                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="contenedorTarjetasTrimestres"></div>
                 </div>
 
-                <!-- NIVEL 4 (INFORME MENSUAL): LOS 12 MESES -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h2 class="text-sm font-black text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-check text-green-600"></i> Resumen de los 12 Meses (Haz clic en un mes para gestionarlo)
+                        <i class="fa-solid fa-calendar-check text-green-600"></i> Resumen de los 12 Meses
                     </h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="contenedorResumenMeses">
-                        <!-- Generado por JS -->
-                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="contenedorResumenMeses"></div>
                 </div>
             </div>
 
@@ -273,9 +254,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="qMesesContainer">
-                    <!-- Generado por JS -->
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="qMesesContainer"></div>
             </div>
 
             <!-- ==================== SUB-VISTA C: GESTIÓN DE MES ==================== -->
@@ -302,7 +281,6 @@
                     </div>
                 </div>
 
-                <!-- KPIs del Mes -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-green-500 flex justify-between items-center">
                         <div>
@@ -326,7 +304,6 @@
                     </div>
                 </div>
 
-                <!-- Formulario y Tabla de Pedidos -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="no-print bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit" id="panelFormulario">
                         <h2 class="text-lg font-bold text-slate-700 border-b pb-2 mb-4">
@@ -382,13 +359,12 @@
             </div>
         </main>
 
-        <!-- Pie de página App -->
         <footer class="mt-auto py-4 text-center text-xs text-slate-400 font-medium border-t border-slate-200">
             Desarrollado por Robert E. Muriel A.
         </footer>
     </div>
 
-    <!-- ==================== MODAL REPORTE EJECUTIVO AISLADO ==================== -->
+    <!-- ==================== MODAL REPORTE EJECUTIVO ==================== -->
     <div id="modalDetallePeriodo" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-4">
         <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
             <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center no-print">
@@ -397,8 +373,6 @@
             </div>
             
             <div class="p-6 sm:p-8 overflow-y-auto flex-1 bg-white print-modal-content">
-                
-                <!-- Encabezado de impresión exclusivo del Modal -->
                 <div class="hidden print:block mb-6 pb-4 border-b border-slate-300">
                     <div class="flex justify-between items-end">
                         <div>
@@ -412,7 +386,6 @@
                     </div>
                 </div>
 
-                <!-- Título y Gráfico del Modal -->
                 <div class="flex flex-col-reverse sm:flex-row justify-between items-center sm:items-start mb-8 gap-4">
                     <div class="text-center sm:text-left">
                         <h2 class="text-2xl sm:text-3xl font-black text-slate-800" id="reporteSubTitulo">Detalle de Operaciones</h2>
@@ -423,7 +396,6 @@
                     </div>
                 </div>
 
-                <!-- Tarjetas KPI Modal -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 print:grid-cols-3 print:gap-4">
                     <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Meta / Presupuesto</p>
@@ -476,7 +448,6 @@
             </div>
             
             <div class="p-6 overflow-y-auto space-y-6">
-                <!-- Sincronización Cloud -->
                 <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 space-y-3">
                     <h4 class="font-bold text-indigo-900 text-sm"><i class="fa-solid fa-cloud-arrow-up text-indigo-600 mr-1"></i> Sincronización en la Nube (JSONStorage)</h4>
                     <p class="text-xs text-indigo-700">Conecta tu base de datos para sincronizar tu PC y dispositivos móviles automáticamente.</p>
@@ -486,7 +457,6 @@
                     </div>
                 </div>
 
-                <!-- Crear Año -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                     <h4 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-calendar-plus text-green-600 mr-1"></i> Crear Nuevo Año</h4>
                     <div class="flex gap-3 items-center">
@@ -495,7 +465,6 @@
                     </div>
                 </div>
 
-                <!-- Exportar e Importar Datos / Configuración -->
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 space-y-3">
                     <h4 class="font-bold text-blue-900 text-sm"><i class="fa-solid fa-file-arrow-down text-blue-600 mr-1"></i> Respaldo Manual Local (Backup)</h4>
                     <p class="text-xs text-blue-700">Exporta un archivo JSON de respaldo si no deseas usar la nube.</p>
@@ -510,7 +479,6 @@
                     </div>
                 </div>
 
-                <!-- Reglas Comisión -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                     <h4 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-money-bill-wave text-blue-600 mr-1"></i> Reglas de Comisión (<span id="cfgAnioLabel">2026</span>)</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -525,7 +493,6 @@
                     </div>
                 </div>
 
-                <!-- Presupuestos Mensuales -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-chart-column text-indigo-600 mr-1"></i> Metas / Presupuestos Mensuales ($ COP)</h4>
@@ -536,7 +503,6 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="inputsMetasMeses"></div>
                 </div>
 
-                <!-- Zona de Peligro / Reset -->
                 <div class="bg-red-50 p-4 rounded-xl border border-red-200 space-y-2">
                     <h4 class="font-bold text-red-700 text-sm"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Zona de Restablecimiento</h4>
                     <p class="text-xs text-red-600">Elimina todos los pedidos guardados, limpia la base local y reinicia el módulo.</p>
@@ -564,13 +530,9 @@
         let pedidoEditandoId = null;
         let chartInstances = {};
 
-        // URLs y credenciales de la Nube (JSONStorage)
         let cloudGetUrl = localStorage.getItem('geovision_cloud_url') || "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a4f57";
-        
-        // ⚠️ PEGA AQUÍ TU API KEY REAL DE JSONSTORAGE:
-        let apiKeyCloud = "674ca75d-2cb7-4b2f-8d47-96628ff180df"; 
+        let apiKeyCloud = "674ca75d-2cb7-4b2f-8d47-96628ff180df"; // Si no usas llave real, déjalo así o bórralo
 
-        // --- SISTEMA DE NOTIFICACIONES TOAST (PRO) ---
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -631,12 +593,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             if(cloudGetUrl) {
                 document.getElementById('inputCloudUrl').value = cloudGetUrl;
-                sincronizarDesdeCloud(false); // Sincronización silenciosa inicial
+                sincronizarDesdeCloud(false);
             }
             verificarSesion();
         });
 
-        // ==================== LÓGICA DE NUBE & CONCURRENCIA (VERSIONING) ====================
         function guardarUrlNube() {
             const urlInput = document.getElementById('inputCloudUrl').value.trim();
             if(!urlInput) { showToast("Por favor ingresa un enlace válido.", "error"); return; }
@@ -647,8 +608,10 @@
 
         async function sincronizarDesdeCloud(mostrarAlerta = false) {
             if (!cloudGetUrl) return;
-            // Incluir la API Key también en la petición GET para evitar errores de autorización en dispositivos móviles
-            let urlGet = apiKeyCloud ? `${cloudGetUrl.split('?')[0]}?apiKey=${apiKeyCloud}` : cloudGetUrl;
+            let urlGet = cloudGetUrl;
+            if (apiKeyCloud && apiKeyCloud !== "TU_API_KEY_AQUI") {
+                urlGet = `${cloudGetUrl.split('?')[0]}?apiKey=${apiKeyCloud}`;
+            }
             try {
                 const response = await fetch(urlGet);
                 if (!response.ok) throw new Error("Error en conexión con la nube");
@@ -675,7 +638,10 @@
 
         async function subirACloud() {
             if (!cloudGetUrl) return;
-            let urlPut = apiKeyCloud ? `${cloudGetUrl.split('?')[0]}?apiKey=${apiKeyCloud}` : cloudGetUrl;
+            let urlPut = cloudGetUrl;
+            if (apiKeyCloud && apiKeyCloud !== "TU_API_KEY_AQUI") {
+                urlPut = `${cloudGetUrl.split('?')[0]}?apiKey=${apiKeyCloud}`;
+            }
             try {
                 const response = await fetch(urlPut, {
                     method: 'PUT',
@@ -686,7 +652,7 @@
                 console.log("Datos sincronizados en la nube exitosamente.");
             } catch (error) {
                 console.error("Fallo la subida a la nube:", error);
-                showToast("Error al guardar en la nube (Verifica tu API Key).", "error");
+                showToast("Error al guardar en la nube.", "error");
             }
         }
 
@@ -702,7 +668,6 @@
             showToast("Datos guardados correctamente.");
         }
 
-        // ==================== LÓGICA GENERAL DE VISTAS ====================
         function verificarSesion() {
             if (ingenieroActual) {
                 document.getElementById('viewLanding').classList.add('hidden');
@@ -755,7 +720,7 @@
         }
 
         function reiniciarSistemaCompleto() {
-            if (confirm("⚠️ ¿Estás seguro de restablecer el sistema? Se borrarán todos los pedidos guardados y la configuración para dejar el módulo limpio.")) {
+            if (confirm("⚠️ ¿Estás seguro de restablecer el sistema? Se borrarán todos los pedidos guardados.")) {
                 localStorage.removeItem('geovision_multianual_db');
                 localStorage.removeItem('geovision_ingeniero');
                 localStorage.removeItem('geovision_anio_activo');
@@ -817,7 +782,7 @@
             let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbAnios, null, 2));
             let downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `geovision_respaldo_ventas_${anioActual}_${ingenieroActual.replace(/\s+/g, '_')}.json`);
+            downloadAnchor.setAttribute("download", `geovision_respaldo_ventas_${anioActual}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -838,7 +803,7 @@
                         cerrarConfiguracion();
                         poblarSelectLandingAnios();
                     }
-                } catch(err) { showToast("Error al leer el archivo JSON de respaldo.", "error"); }
+                } catch(err) { showToast("Error al leer el archivo JSON.", "error"); }
             };
             reader.readAsText(file);
         }
@@ -1103,7 +1068,7 @@
                 contenedorQ.innerHTML += `
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 transition-all hover:shadow-md space-y-2 group">
                         <div class="flex justify-between items-center">
-                            <span onclick="verTrimestre(${q.id})" class="font-bold text-slate-700 hover:text-blue-600 cursor-pointer" title="Gestionar meses de este trimestre">${q.nombre}</span>
+                            <span onclick="verTrimestre(${q.id})" class="font-bold text-slate-700 hover:text-blue-600 cursor-pointer">${q.nombre}</span>
                             <span class="text-xs font-bold px-2 py-0.5 rounded ${cumpQ >= 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${(cumpQ * 100).toFixed(1)}%</span>
                         </div>
                         <div class="flex items-center justify-between">
@@ -1408,7 +1373,6 @@
             showToast(`Año ${a} creado exitosamente.`);
         }
 
-        // --- DESREGISTRAR SERVICE WORKER ANTERIOR PARA EVITAR BLOQUEOS EN MÓVILES ---
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(registrations => {
                 for(let registration of registrations) {
