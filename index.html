@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js para Gráficos Circulares Profesionales -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
     <style>
         @media print {
@@ -569,8 +567,7 @@
         // URLs y credenciales de la Nube (JSONStorage)
         let cloudGetUrl = localStorage.getItem('geovision_cloud_url') || "https://api.jsonstorage.net/v1/json/279e3ed9-ce2d-4e79-b262-28e717a750ab/5eb983e6-328f-4165-8957-b702a48a4f57";
         
-        // Clave API para permitir escritura (PUT). 
-        // ⚠️ Si tu API key es necesaria para escribir, colócala dentro de las comillas abajo:
+        // ⚠️ PEGA AQUÍ TU API KEY REAL DE JSONSTORAGE:
         let apiKeyCloud = "674ca75d-2cb7-4b2f-8d47-96628ff180df"; 
 
         // --- SISTEMA DE NOTIFICACIONES TOAST (PRO) ---
@@ -650,8 +647,9 @@
 
         async function sincronizarDesdeCloud(mostrarAlerta = false) {
             if (!cloudGetUrl) return;
+            let urlGet = apiKeyCloud ? `${cloudGetUrl.split('?')[0]}?apiKey=${apiKeyCloud}` : cloudGetUrl;
             try {
-                const response = await fetch(cloudGetUrl);
+                const response = await fetch(urlGet);
                 if (!response.ok) throw new Error("Error en conexión con la nube");
                 const data = await response.json();
                 
@@ -676,8 +674,7 @@
 
         async function subirACloud() {
             if (!cloudGetUrl) return;
-            // Construimos la URL de PUT incluyendo la API Key si está configurada
-            let urlPut = apiKeyCloud ? `${cloudGetUrl}?apiKey=${apiKeyCloud}` : cloudGetUrl;
+            let urlPut = apiKeyCloud ? `${cloudGetUrl.split('?')[0]}?apiKey=${apiKeyCloud}` : cloudGetUrl;
             try {
                 const response = await fetch(urlPut, {
                     method: 'PUT',
@@ -1410,21 +1407,13 @@
             showToast(`Año ${a} creado exitosamente.`);
         }
 
-        // --- AUTO-SINCRONIZACIÓN AL RECUPERAR CONEXIÓN ---
-        window.addEventListener('online', () => {
-            showToast("Conexión restablecida. Sincronizando datos...", "success");
-            sincronizarDesdeCloud(false); 
-            subirACloud();
-        });
-
-        window.addEventListener('offline', () => {
-            showToast("Sin conexión a internet. Trabajando en modo offline.", "error");
-        });
-
+        // --- DESREGISTRAR SERVICE WORKER ANTERIOR PARA EVITAR BLOQUEOS EN MÓVILES ---
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-            .then(() => console.log('Service Worker registrado correctamente.'))
-            .catch((err) => console.log('Error en Service Worker:', err));
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
         }
     </script>
 </body>
