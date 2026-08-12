@@ -1,10 +1,17 @@
 const CACHE_NAME = 'geovision-v1';
-const ASSETS = ['./index.html', './manifest.json'];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
-});
+// Evento Fetch para ignorar llamadas a la API de la nube
+self.addEventListener('fetch', (event) => {
+    // Si la petición va dirigida a JSONStorage, dejamos que el navegador la maneje directamente sin intervenir
+    if (event.request.url.includes('api.jsonstorage.net')) {
+        return;
+    }
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
+    event.respondWith(
+        caches.match(event.request).then((response) => {
+            return response || fetch(event.request);
+        }).catch(() => {
+            // Manejo opcional para offline si es necesario
+        })
+    );
 });
